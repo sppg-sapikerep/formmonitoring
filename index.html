@@ -84,40 +84,46 @@
             box-shadow: 0 4px 20px -2px rgba(11, 37, 69, 0.08);
         }
 
-        /* CRITICAL: Off-screen PDF container layout to prevent html2canvas blank page issue */
+        /* CRITICAL: Fixed overlay container for html2canvas to capture exact coordinates without blank output */
         #pdfRenderContainer {
-            position: absolute;
+            position: fixed;
             top: 0;
-            left: -9999px; /* Positioned off-screen, NOT display:none so canvas can measure dimensions */
+            left: 0;
             width: 210mm;
             background-color: #ffffff;
             z-index: -9999;
-            visibility: visible;
+            opacity: 0.001;
+            pointer-events: none;
         }
 
-        /* EXACT OFFICIAL SPPG PDF PRINT STYLING */
+        /* EXACT OFFICIAL SPPG PDF PRINT STYLING - PREVENT RIGHT MARGIN CLIPPING */
         #pdfRenderTemplate {
             width: 210mm;
-            padding: 10mm 12mm;
+            padding: 8mm 10mm;
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 9.5pt;
+            font-size: 8.5pt;
             color: #000;
             background: #fff;
-            line-height: 1.35;
+            line-height: 1.3;
             box-sizing: border-box;
         }
 
         #pdfRenderTemplate table {
             width: 100%;
+            table-layout: fixed;
             border-collapse: collapse;
-            margin-bottom: 8px;
-            font-size: 9pt;
+            margin-bottom: 6px;
+            font-size: 8.5pt;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         #pdfRenderTemplate th, #pdfRenderTemplate td {
             border: 1px solid #000;
-            padding: 4px 6px;
+            padding: 3px 5px;
             vertical-align: top;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         #pdfRenderTemplate th {
@@ -129,8 +135,8 @@
         .pdf-header-title {
             text-align: center;
             font-weight: bold;
-            font-size: 13pt;
-            margin-bottom: 10px;
+            font-size: 12pt;
+            margin-bottom: 8px;
             border-bottom: 2.5px solid #000;
             padding-bottom: 4px;
             text-transform: uppercase;
@@ -140,48 +146,42 @@
         .pdf-section-title {
             background-color: #0B2545;
             color: #ffffff;
-            padding: 4px 8px;
+            padding: 3px 6px;
             font-weight: bold;
-            font-size: 10.5pt;
-            margin-top: 12px;
-            margin-bottom: 6px;
+            font-size: 9.5pt;
+            margin-top: 10px;
+            margin-bottom: 5px;
             border-radius: 2px;
         }
 
         .pdf-sub-title {
             font-weight: bold;
-            font-size: 9.5pt;
-            margin-top: 8px;
-            margin-bottom: 4px;
+            font-size: 8.5pt;
+            margin-top: 6px;
+            margin-bottom: 3px;
             color: #000;
             border-bottom: 1px solid #cbd5e1;
             padding-bottom: 2px;
         }
 
         .pdf-footnote {
-            font-size: 7.5pt;
-            color: #475569;
+            font-size: 7.2pt;
+            color: #334155;
             font-style: italic;
-            margin-top: 3px;
-            margin-bottom: 8px;
+            margin-top: 2px;
+            margin-bottom: 6px;
             line-height: 1.2;
-        }
-
-        .pdf-box-checked {
-            font-weight: bold;
-            color: #059669;
         }
 
         .pdf-page-break {
             page-break-before: always;
-            margin-top: 15px;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col bg-slate-50 text-slate-800">
 
-    <!-- HEADER NAVBAR -->
-    <header class="bg-navy-800 text-white shadow-lg sticky top-0 z-50 border-b-4 border-gold-500">
+    <header class="bg-navy-800 text-white shadow-lg sticky top-0 z-40 border-b-4 border-gold-500">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-20">
                 <!-- Logo & Title -->
@@ -212,22 +212,22 @@
         <div class="bg-navy-900 px-4 sm:px-8 border-t border-slate-800">
             <div class="max-w-7xl mx-auto flex items-center justify-between py-1">
                 <div class="flex space-x-2 overflow-x-auto">
-                    <button onclick="switchTab('form-tab')" id="nav-form-tab" class="tab-btn active px-4 py-2.5 text-sm font-medium rounded-t-lg transition flex items-center space-x-2 whitespace-nowrap text-slate-300 hover:text-white">
+                    <button type="button" onclick="switchTab('form-tab')" id="nav-form-tab" class="tab-btn active px-4 py-2.5 text-sm font-medium rounded-t-lg transition flex items-center space-x-2 whitespace-nowrap text-slate-300 hover:text-white">
                         <i class="fa-solid fa-file-pen text-emerald-500"></i>
                         <span>Form Checklist SPPG</span>
                     </button>
-                    <button onclick="switchTab('history-tab')" id="nav-history-tab" class="tab-btn px-4 py-2.5 text-sm font-medium rounded-t-lg transition flex items-center space-x-2 whitespace-nowrap text-slate-300 hover:text-white">
+                    <button type="button" onclick="switchTab('history-tab')" id="nav-history-tab" class="tab-btn px-4 py-2.5 text-sm font-medium rounded-t-lg transition flex items-center space-x-2 whitespace-nowrap text-slate-300 hover:text-white">
                         <i class="fa-solid fa-database text-gold-500"></i>
                         <span>Riwayat & Export Database</span>
                     </button>
-                    <button onclick="switchTab('analytics-tab')" id="nav-analytics-tab" class="tab-btn px-4 py-2.5 text-sm font-medium rounded-t-lg transition flex items-center space-x-2 whitespace-nowrap text-slate-300 hover:text-white">
+                    <button type="button" onclick="switchTab('analytics-tab')" id="nav-analytics-tab" class="tab-btn px-4 py-2.5 text-sm font-medium rounded-t-lg transition flex items-center space-x-2 whitespace-nowrap text-slate-300 hover:text-white">
                         <i class="fa-solid fa-chart-pie text-sky-400"></i>
                         <span>Ringkasan Dashboard</span>
                     </button>
                 </div>
 
                 <!-- Google Drive Status Button -->
-                <button onclick="openGDriveModal()" id="gdrive-status-btn" class="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition">
+                <button type="button" onclick="openGDriveModal()" id="gdrive-status-btn" class="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition cursor-pointer">
                     <i class="fa-brands fa-google-drive text-amber-400 text-sm"></i>
                     <span id="gdrive-status-text">Set Google Drive</span>
                 </button>
@@ -243,7 +243,7 @@
                     <i class="fa-brands fa-google-drive text-2xl text-amber-500"></i>
                     <h3 class="text-lg font-bold font-heading text-navy-800">Koneksi Auto-Save Google Drive</h3>
                 </div>
-                <button onclick="closeGDriveModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+                <button type="button" onclick="closeGDriveModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
             </div>
 
             <div class="space-y-3 text-xs text-slate-600">
@@ -254,26 +254,71 @@
 
                 <div class="space-y-2">
                     <label class="block font-bold text-slate-700">Google Apps Script Web App URL:</label>
-                    <input type="url" id="gas_url_input" placeholder="https://script.google.com/macros/s/AKfycbz5JC58Bkto3VUO5Sk2ebI6ZMzbkxkqDv2Jwjii36GjlKG5jD5uwR1wSLytD6J-0VVJ/exec" class="w-full p-2.5 border rounded-lg font-mono text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                    <input type="url" id="gas_url_input" value="https://script.google.com/macros/s/AKfycbz5JC58Bkto3VUO5Sk2ebI6ZMzbkqDv2Jwjii36GjlKG5jD5uwR1wSLytD6J-0VVJ/exec" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-2.5 border rounded-lg font-mono text-xs outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
 
-                <!-- Petunjuk Singkat Setup Apps Script -->
                 <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl space-y-2 text-[11.5px] text-amber-900">
                     <span class="font-bold block flex items-center gap-1">
                         <i class="fa-solid fa-code"></i> Kode Script Google Apps Script (Salin ke Extensions > Apps Script):
                     </span>
                     <pre class="bg-amber-100/70 p-2 rounded text-[10px] font-mono overflow-x-auto select-all">
+function doGet(e) {
+  try {
+    var folderId = "1OxQd1lFN1wq1T7-obgOiHrjPTKWTv2Hy";
+    var folder = DriveApp.getFolderById(folderId);
+    var dbFile = folder.getFilesByName("db_sppg_records.json");
+    var records = [];
+    if (dbFile.hasNext()) {
+      var content = dbFile.next().getBlob().getDataAsString();
+      records = JSON.parse(content);
+    }
+    return ContentService.createTextOutput(JSON.stringify({status: "success", data: records}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({status: "error", message: err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
 function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
     var folderId = "1OxQd1lFN1wq1T7-obgOiHrjPTKWTv2Hy";
     var folder = DriveApp.getFolderById(folderId);
-    var bytes = Utilities.base64Decode(data.pdfBase64);
-    var blob = Utilities.newBlob(bytes, "application/pdf", data.fileName);
-    var file = folder.createFile(blob);
-    return ContentService.createTextOutput(JSON.stringify({status: "success", fileUrl: file.getUrl()})).setMimeType(ContentService.MimeType.JSON);
+    var fileUrl = "";
+    
+    if (data.pdfBase64) {
+      var bytes = Utilities.base64Decode(data.pdfBase64);
+      var blob = Utilities.newBlob(bytes, "application/pdf", data.fileName);
+      var file = folder.createFile(blob);
+      fileUrl = file.getUrl();
+    }
+    
+    if (data.record) {
+      data.record.driveUrl = fileUrl || data.record.driveUrl || "";
+      var dbFile = folder.getFilesByName("db_sppg_records.json");
+      var records = [];
+      var dbFileObj = null;
+      if (dbFile.hasNext()) {
+        dbFileObj = dbFile.next();
+        try { records = JSON.parse(dbFileObj.getBlob().getDataAsString()); } catch(ex){}
+      }
+      
+      var idx = records.findIndex(function(r){ return r.id === data.record.id; });
+      if (idx >= 0) { records[idx] = data.record; } else { records.unshift(data.record); }
+      
+      if (dbFileObj) {
+        dbFileObj.setContent(JSON.stringify(records));
+      } else {
+        folder.createFile("db_sppg_records.json", JSON.stringify(records), "application/json");
+      }
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({status: "success", fileUrl: fileUrl}))
+      .setMimeType(ContentService.MimeType.JSON);
   } catch(err) {
-    return ContentService.createTextOutput(JSON.stringify({status: "error", message: err.toString()})).setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({status: "error", message: err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }
 </pre>
@@ -287,7 +332,18 @@ function doPost(e) {
         </div>
     </div>
 
-    <!-- MAIN CONTAINER -->
+    <!-- MODAL DIALOG KONFIRMASI KUSTOM -->
+    <div id="confirmModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl text-slate-800 space-y-4">
+            <h3 id="confirmTitle" class="text-lg font-bold font-heading text-navy-800">Konfirmasi</h3>
+            <p id="confirmMessage" class="text-sm text-slate-600"></p>
+            <div class="flex justify-end space-x-2 pt-2 border-t">
+                <button type="button" id="confirmCancelBtn" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-xs font-bold">Batal</button>
+                <button type="button" id="confirmOkBtn" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold">Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
     <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6">
 
         <!-- TAB 1: FORM CHECKLIST INPUT -->
@@ -363,7 +419,6 @@ function doPost(e) {
                     </div>
                 </div>
 
-                <!-- BAGIAN I: DATA UMUM -->
                 <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200">
                     <div class="flex items-center space-x-3 mb-4 pb-3 border-b border-slate-100">
                         <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold">
@@ -538,7 +593,6 @@ function doPost(e) {
                     </div>
                 </div>
 
-                <!-- BAGIAN II: PENERIMAAN DAN PENYIMPANAN BAHAN BAKU -->
                 <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200">
                     <div class="flex items-center space-x-3 mb-4 pb-3 border-b border-slate-100">
                         <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold">
@@ -720,7 +774,6 @@ function doPost(e) {
                     </div>
                 </div>
 
-                <!-- BAGIAN III: PERSIAPAN, PENGOLAHAN DAN PENDINGINAN -->
                 <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200">
                     <div class="flex items-center space-x-3 mb-4 pb-3 border-b border-slate-100">
                         <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold">
@@ -987,7 +1040,6 @@ function doPost(e) {
                     </div>
                 </div>
 
-                <!-- BAGIAN IV: PEMORSIAN DAN DISTRIBUSI -->
                 <div class="bg-white rounded-2xl p-5 sm:p-6 card-shadow border border-slate-200">
                     <div class="flex items-center space-x-3 mb-4 pb-3 border-b border-slate-100">
                         <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold">
@@ -1158,7 +1210,6 @@ function doPost(e) {
                     </div>
                 </div>
 
-                <!-- BAGIAN V: TEMUAN & KEPUTUSAN FINAL -->
                 <div class="bg-navy-800 text-white rounded-2xl p-5 sm:p-6 shadow-xl border-t-4 border-gold-500">
                     <div class="flex items-center space-x-3 mb-4 pb-3 border-b border-slate-700">
                         <div class="w-8 h-8 rounded-lg bg-gold-500 text-navy-900 flex items-center justify-center font-bold">
@@ -1214,11 +1265,11 @@ function doPost(e) {
 
                 <!-- SUBMIT BUTTONS -->
                 <div class="flex flex-col sm:flex-row items-center justify-end gap-3 pt-4">
-                    <button type="button" onclick="saveAndDownloadPDF()" class="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 transition transform active:scale-95">
+                    <button type="button" onclick="saveAndDownloadPDF()" class="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 transition transform active:scale-95 cursor-pointer">
                         <i class="fa-solid fa-file-pdf text-lg"></i>
                         <span>Simpan & Download PDF Official</span>
                     </button>
-                    <button type="submit" class="w-full sm:w-auto px-6 py-3.5 bg-navy-800 hover:bg-navy-900 text-white font-bold rounded-xl shadow-md flex items-center justify-center gap-2 transition">
+                    <button type="submit" class="w-full sm:w-auto px-6 py-3.5 bg-navy-800 hover:bg-navy-900 text-white font-bold rounded-xl shadow-md flex items-center justify-center gap-2 transition cursor-pointer">
                         <i class="fa-solid fa-floppy-disk text-gold-400"></i>
                         <span>Simpan Ke Database Saja</span>
                     </button>
@@ -1250,7 +1301,7 @@ function doPost(e) {
                             <span class="font-bold text-slate-600">S/D:</span>
                             <input type="date" id="filter_end" onchange="applyDateFilter()" class="p-2 border rounded-lg bg-slate-50">
                         </div>
-                        <button onclick="resetDateFilter()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg transition">
+                        <button type="button" onclick="resetDateFilter()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg transition cursor-pointer">
                             Reset
                         </button>
                     </div>
@@ -1258,14 +1309,18 @@ function doPost(e) {
 
                 <!-- Export & Summary Buttons -->
                 <div class="flex flex-wrap items-center justify-between gap-3 my-4">
-                    <div class="text-xs text-slate-600 font-semibold">
-                        Menampilkan <span id="recordCount" class="text-emerald-600 font-bold">0</span> Laporan Tersimpan
+                    <div class="text-xs text-slate-600 font-semibold flex items-center gap-2">
+                        <span>Menampilkan <span id="recordCount" class="text-emerald-600 font-bold">0</span> Laporan Tersimpan</span>
+                        <span id="sync_status_badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500">Disk Lokal</span>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="exportToCSV()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 transition">
+                        <button type="button" onclick="syncWithGoogleDrive(true)" class="px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 transition cursor-pointer">
+                            <i class="fa-solid fa-arrows-rotate"></i> Sinkronkan Drive
+                        </button>
+                        <button type="button" onclick="exportToCSV()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 transition cursor-pointer">
                             <i class="fa-solid fa-file-excel"></i> Export CSV/Excel
                         </button>
-                        <button onclick="clearAllDataConfirm()" class="px-3.5 py-2 bg-rose-100 text-rose-700 hover:bg-rose-200 font-bold rounded-lg text-xs flex items-center gap-1.5 transition">
+                        <button type="button" onclick="clearAllDataConfirm()" class="px-3.5 py-2 bg-rose-100 text-rose-700 hover:bg-rose-200 font-bold rounded-lg text-xs flex items-center gap-1.5 transition cursor-pointer">
                             <i class="fa-solid fa-trash-can"></i> Hapus Semua Data
                         </button>
                     </div>
@@ -1483,12 +1538,12 @@ function doPost(e) {
                 <thead>
                     <tr>
                         <th style="width: 5%; text-align: center;">Cek</th>
-                        <th>Jenis Bahan Baku</th>
-                        <th style="width: 15%;">Jumlah</th>
-                        <th style="width: 18%;">Kualitas</th>
+                        <th style="width: 22%;">Jenis Bahan Baku</th>
+                        <th style="width: 13%;">Jumlah</th>
+                        <th style="width: 15%;">Kualitas</th>
                         <th style="width: 12%;">Waktu</th>
-                        <th style="width: 18%;">Penerima</th>
-                        <th>Keterangan</th>
+                        <th style="width: 15%;">Penerima</th>
+                        <th style="width: 18%;">Keterangan</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1614,7 +1669,8 @@ function doPost(e) {
                 </tbody>
             </table>
             <div class="pdf-footnote">
-                <b>Catatan:</b> Ikan berdasar insiden Kab. Karo (13 Agt 2026); Ayam bersantan & telur dadar berdasar data ARR tertinggi & temuan lab Kemenkes PHEOC. Susu jaga-jaga umum, bukan insiden spesifik MBG. Daftar ini tidak lengkap tetap waspada menu lain yang terlihat berisiko.<br>
+                <b>Catatan:</b> Ikan berdasar insiden Kab. Karo (13 Agt 2026); Ayam bersantan & telur dadar berdasar data ARR tertinggi & temuan lab Kemenkes PHEOC.
+                Susu jaga-jaga umum, bukan insiden spesifik MBG. Daftar ini tidak lengkap tetap waspada menu lain yang terlihat berisiko.<br>
                 <b>Petunjuk Pengisian:</b> Setiap kotak diisi dengan ceklis.
             </div>
 
@@ -1747,15 +1803,16 @@ function doPost(e) {
             </div>
 
             <div class="pdf-sub-title">3. PROSES DISTRIBUSI</div>
+            <!-- EXACT FORMAL BORDERED TABLE MATCHING REFERENCE IMAGE -->
             <table>
                 <tr>
-                    <td style="padding: 6px; font-size: 8.5pt; line-height: 1.5; background: #ffffff;">
-                        • <b>Jam Selesai Masak:</b> <span id="pdf_dist_m">-</span> | <b>Jam Pendistribusian (Saas berangkat dari SPPG):</b> <span id="pdf_dist_b">-</span><br>
-                        • <b>Jam Sampai di Sekolah / di Posyandu:</b> <span id="pdf_dist_t">-</span> | <b>Jam Konsumsi Makanan:</b> <span id="pdf_dist_k">-</span> <i>(dikonsumsi maksimal 4 jam setelah proses produksi)</i><br>
+                    <td style="padding: 8px; font-size: 8.5pt; line-height: 1.6; background: #ffffff;">
+                        • <b>Jam Selesai Masak:</b> <span id="pdf_dist_m">-</span> | <b>Jam Pendistribusian (Saat berangkat dari SPPG):</b> <span id="pdf_dist_b">-</span><br>
+                        • <b>Jam Sampai di Sekolah / di Posyandu:</b> <span id="pdf_dist_t">-</span> | <b>Jam Konsumsi Makanan:</b> <span id="pdf_dist_k">-</span> <i style="font-size:7.5pt;">(dikonsumsi maksimal 4 jam setelah proses produksi)</i><br>
                         • <b>Apakah label di ompreng telah terpasang dan berfungsi sebagai segel?</b> <span id="pdf_dist_segel">-</span><br>
                         • <b>Suhu makanan saat mulai dibagikan:</b><br>
-                        &nbsp;&nbsp;&nbsp;- Makanan panas: <span id="pdf_dist_sp">-</span> °C (jam <span id="pdf_dist_jp">-</span>) <i>[standar aman: &gt; 60°C]</i><br>
-                        &nbsp;&nbsp;&nbsp;- Makanan dingin: <span id="pdf_dist_sd">-</span> °C (jam <span id="pdf_dist_jd">-</span>) <i>[standar aman: &lt; 5°C]</i><br>
+                        &nbsp;&nbsp;&nbsp;- Makanan panas: <span id="pdf_dist_sp">-</span> °C (jam <span id="pdf_dist_jp">-</span>) <i style="font-size:7.5pt;">[standar aman: &gt; 60°C]</i><br>
+                        &nbsp;&nbsp;&nbsp;- Makanan dingin: <span id="pdf_dist_sd">-</span> °C (jam <span id="pdf_dist_jd">-</span>) <i style="font-size:7.5pt;">[standar aman: &lt; 5°C]</i><br>
                         • <b>Kalau makanan tidak langsung dibagikan, sudah dipindah ke tempat / kulkas dingin?</b> <span id="pdf_dist_kulkas">-</span><br>
                         • <b>Apakah ada kendala dalam proses distribusi?</b> <span id="pdf_dist_kendala_res">-</span> (Kalau ada, sebutkan kendala: <span id="pdf_dist_kendala_ket">-</span>)
                     </td>
@@ -1796,37 +1853,416 @@ function doPost(e) {
         // LocalStorage & Google Drive Constants
         const STORAGE_KEY = 'SPPG_MONITORING_DATABASE_V1';
         const GOOGLE_DRIVE_FOLDER_ID = '1OxQd1lFN1wq1T7-obgOiHrjPTKWTv2Hy';
-        let googleScriptUrl = localStorage.getItem('SPPG_GAS_URL') || '';
+        const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbz5JC58Bkto3VUO5Sk2ebI6ZMzbkxkqDv2Jwjii36GjlKG5jD5uwR1wSLytD6J-0VVJ/exec';
+
+        // Safe Storage Helper
+        function getSafeStorage(key, defaultVal = '') {
+            try {
+                return localStorage.getItem(key) || defaultVal;
+            } catch (e) {
+                console.warn('Storage blocked:', e);
+                return defaultVal;
+            }
+        }
+
+        function setSafeStorage(key, val) {
+            try {
+                localStorage.setItem(key, val);
+            } catch (e) {
+                console.warn('Storage write blocked:', e);
+            }
+        }
+
+        let googleScriptUrl = getSafeStorage('SPPG_GAS_URL', DEFAULT_GAS_URL);
+
+        // Safe DOM Text Helper
+        function setTxt(id, val) {
+            const el = document.getElementById(id);
+            if (el) el.innerText = (val !== undefined && val !== null && val !== '') ? val : '-';
+        }
 
         // Initialize App on DOM Ready
         window.addEventListener('DOMContentLoaded', () => {
             const today = new Date().toISOString().split('T')[0];
-            document.getElementById('tanggal_audit').value = today;
+            const tglAudit = document.getElementById('tanggal_audit');
+            if (tglAudit) tglAudit.value = today;
+            
             updateGDriveUIStatus();
             renderHistoryTable();
             updateAnalytics();
+            
+            // Auto sync from Drive on initial load
+            if (googleScriptUrl) {
+                syncWithGoogleDrive(false);
+            }
         });
 
+        // Custom Modal Confirmation System (Replacing confirm to follow rules)
+        function showConfirm(title, message, onOk) {
+            const modal = document.getElementById('confirmModal');
+            if (!modal) return;
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmMessage').innerText = message;
+            
+            const cancelBtn = document.getElementById('confirmCancelBtn');
+            const okBtn = document.getElementById('confirmOkBtn');
+            
+            const close = () => modal.classList.add('hidden');
+            cancelBtn.onclick = close;
+            okBtn.onclick = () => { close(); if(onOk) onOk(); };
+            
+            modal.classList.remove('hidden');
+        }
+
+        // Toast Notification System
+        function showNotification(title, message, type = 'info') {
+            const container = document.getElementById('toastContainer') || (() => {
+                const c = document.createElement('div');
+                c.id = 'toastContainer';
+                c.className = 'fixed bottom-5 right-5 z-50 flex flex-col space-y-2 max-w-sm w-full px-4';
+                document.body.appendChild(c);
+                return c;
+            })();
+
+            const toast = document.createElement('div');
+            let bg = 'bg-slate-800 text-white';
+            if (type === 'success') bg = 'bg-emerald-600 text-white';
+            if (type === 'warning') bg = 'bg-amber-600 text-white';
+            if (type === 'info') bg = 'bg-navy-800 text-white';
+
+            toast.className = `${bg} rounded-xl p-4 shadow-xl text-xs flex items-start space-x-3 transition transform duration-300 translate-y-2 opacity-0`;
+            toast.innerHTML = `
+                <i class="fa-solid fa-circle-info text-base mt-0.5"></i>
+                <div class="flex-grow">
+                    <strong class="block font-bold">${title}</strong>
+                    <span class="text-slate-100">${message}</span>
+                </div>
+            `;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function autoFillSampleData() {
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.value = val;
+            };
+            const setChk = (id, checked) => {
+                const el = document.getElementById(id);
+                if (el) el.checked = checked;
+            };
+            const setRadio = (name, val) => {
+                const el = document.querySelector(`input[name="${name}"][value="${val}"]`);
+                if (el) el.checked = true;
+            };
+
+            const nowStr = new Date().toISOString().split('T')[0];
+
+            setVal('nama_sppg', 'SPPG Bandung Pusat');
+            setVal('kepala_sppg', 'Drs. H. Mulyana, M.Kes');
+            setVal('pengawas_keuangan', 'Asep Saepullah, S.E.');
+            setVal('pengawas_gizi', 'Rina Wulandari, S.Gz');
+            setVal('tanggal_audit', nowStr);
+            setVal('jam_zoom', '07:30');
+            setVal('asisten_lapangan', 'Budi Santoso, S.ST');
+            setVal('chef_nama', 'Chef Anton Wijaya');
+
+            setVal('pm_pd_potensi', '1200');
+            setVal('pm_pd_dilayani', '1180');
+            setVal('pm_3b_potensi', '150');
+            setVal('pm_3b_dilayani', '145');
+            calculatePMTotal();
+
+            setRadio('cert_slhs', 'Ya');
+            setRadio('cert_halal', 'Ya');
+            setRadio('cert_bnsp', 'Ya');
+
+            setRadio('air_minum_src', 'RO');
+            setVal('air_minum_tgl', `${nowStr}T06:00`);
+            setVal('air_minum_ph', '7.2');
+            setRadio('air_masak_src', 'RO');
+            setVal('air_masak_tgl', `${nowStr}T06:00`);
+            setVal('air_masak_ph', '7.0');
+
+            setChk('ruang_1_chk', true); setVal('ruang_1_res', 'Ya'); setVal('ruang_1_ket', 'Semua 4 unit termometer terkalibrasi');
+            setChk('ruang_2_chk', true); setVal('ruang_2_res', 'Ya'); setVal('ruang_2_ket', 'Suhu rata-rata ruangan 26°C');
+            setChk('ruang_3_chk', true); setVal('ruang_3_res', 'Ya'); setVal('ruang_3_ket', 'Area bersih & sesuai SOP higienis');
+            setChk('ruang_4_chk', true); setVal('ruang_4_res', 'Ya'); setVal('ruang_4_ket', '2 unit berfungsi baik');
+
+            setChk('bb_karbo_chk', true); setVal('bb_karbo_jml', 'Sesuai'); setVal('bb_karbo_kual', 'Sesuai'); setVal('bb_karbo_jam', '05:30'); setVal('bb_karbo_penerima', 'Ahmad'); setVal('bb_karbo_ket', 'Beras kualitas super');
+            setChk('bb_prohe_chk', true); setVal('bb_prohe_jml', 'Sesuai'); setVal('bb_prohe_kual', 'Sesuai'); setVal('bb_prohe_jam', '05:45'); setVal('bb_prohe_penerima', 'Siti'); setVal('bb_prohe_ket', 'Ayam segar dingin');
+            setChk('bb_prona_chk', true); setVal('bb_prona_jml', 'Sesuai'); setVal('bb_prona_kual', 'Sesuai'); setVal('bb_prona_jam', '06:00'); setVal('bb_prona_penerima', 'Ahmad'); setVal('bb_prona_ket', 'Tahu & tempe segar');
+            setChk('bb_buah_chk', true); setVal('bb_buah_jml', 'Sesuai'); setVal('bb_buah_kual', 'Sesuai'); setVal('bb_buah_jam', '06:00'); setVal('bb_buah_penerima', 'Siti'); setVal('bb_buah_ket', 'Pisang ambon segar');
+            setChk('bb_sayur_chk', true); setVal('bb_sayur_jml', 'Sesuai'); setVal('bb_sayur_kual', 'Sesuai'); setVal('bb_sayur_jam', '05:40'); setVal('bb_sayur_penerima', 'Ahmad'); setVal('bb_sayur_ket', 'Wortel & buncis segar');
+
+            setVal('suhu_beku1_nama', 'Daging Ayam Frozen'); setVal('suhu_beku1_val', '-20.5'); setVal('suhu_beku1_jam', '05:45');
+            setVal('suhu_beku2_nama', 'Ikan Fillet'); setVal('suhu_beku2_val', '-19.0'); setVal('suhu_beku2_jam', '05:50');
+            setVal('suhu_chiller_val', '3.8'); setVal('suhu_chiller_jam', '06:00');
+            setVal('suhu_freezer_val', '-21.0'); setVal('suhu_freezer_jam', '06:00');
+
+            setChk('bm_1_chk', true); setVal('bm_1_res', 'Ya'); setVal('bm_1_ket', 'Air RO teruji');
+            setChk('bm_2_chk', true); setVal('bm_2_res', 'Ya'); setVal('bm_2_ket', 'Chiller 3.8°C');
+            setChk('bm_3_chk', true); setVal('bm_3_res', 'Ya'); setVal('bm_3_ket', 'Penerapan FEFO/FIFO teratur');
+
+            setChk('hp_1_chk', true); setVal('hp_1_res', 'Tidak'); setVal('hp_1_ket', 'Seluruh tim sehat');
+            setChk('hp_2_chk', true); setVal('hp_2_res', 'Ya'); setVal('hp_2_ket', 'APD lengkap 100%');
+            setChk('hp_3_chk', true); setVal('hp_3_res', 'Ya'); setVal('hp_3_ket', 'CTPS sesuai instruksi');
+
+            setChk('p_1_chk', true); setVal('p_1_res', 'Ya'); setVal('p_1_ket', 'SOP THB berjalan');
+            setChk('p_2_chk', true); setVal('p_2_res', 'Tidak'); setVal('p_2_ket', 'Semua bahan segar');
+            setChk('p_3_chk', true); setVal('p_3_res', 'Tidak'); setVal('p_3_ket', 'Proses persiapan lancar');
+
+            setChk('mr_1_chk', true); setVal('mr_1_res', 'Ya');
+            setChk('mr_2_chk', true); setVal('mr_2_res', 'Ya');
+            setChk('mr_3_chk', true); setVal('mr_3_res', 'Ya');
+            setChk('mr_4_chk', true); setVal('mr_4_res', 'Ya');
+            setChk('mr_5_chk', true); setVal('mr_5_res', 'Ya');
+
+            setChk('ho_1_chk', true); setVal('ho_1_res', 'Tidak'); setVal('ho_1_ket', 'Tidak ada gejala sakit');
+            setChk('ho_2_chk', true); setVal('ho_2_res', 'Ya'); setVal('ho_2_ket', 'Masker & sarung tangan terpakai');
+            setChk('ho_3_chk', true); setVal('ho_3_res', 'Ya'); setVal('ho_3_ket', 'Patuh CTPS');
+
+            setChk('m_1_chk', true); setVal('m_1_res', 'Ya'); setVal('m_1_ket', 'Matang sempurna');
+            setChk('m_2_chk', true); setVal('m_2_res', 'Ya'); setVal('m_2_suhu', '85.0'); setVal('m_2_jam', '08:15');
+            setChk('m_3_chk', true); setVal('m_3_res', 'Ya'); setVal('m_3_ket', 'Kepatuhan SOP 100%');
+            setChk('m_4_chk', true); setVal('m_4_res', 'Tidak'); setVal('m_4_ket', 'Tanpa kendala');
+
+            setChk('d_1_chk', true); setVal('d_1_res', 'Ya'); setVal('d_1_ket', 'Ruang pendinginan bersih');
+            setChk('d_2_chk', true); setVal('d_2_res', 'Ya'); setVal('d_2_suhu', '62.0');
+            setChk('d_3_chk', true); setVal('d_3_res', 'Tidak'); setVal('d_3_durasi', '0.5');
+            setChk('d_4_chk', true); setVal('d_4_res', 'Tidak'); setVal('d_4_ket', 'Lancar');
+
+            setChk('po_1_chk', true); setVal('po_1_res', 'Ya'); setVal('po_1_ket', 'Porsi & URT sesuai');
+            setChk('po_2_chk', true); setVal('po_2_res', 'Ya'); setVal('po_2_suhu', '61.5');
+            setChk('po_3_chk', true); setVal('po_3_res', 'Ya'); setVal('po_3_oleh', 'Rina W.'); setVal('po_3_jam', '09:00'); setVal('po_3_hasil', 'Baik & Lezat');
+            setChk('po_4_chk', true); setVal('po_4_res', 'Tidak'); setVal('po_4_ket', 'Lancar');
+            setChk('po_5_chk', true); setVal('po_5_res', 'Ya'); setVal('po_5_ket', '2 sampel tersimpan');
+            setChk('po_6_chk', true); setVal('po_6_res', 'Tidak');
+            setVal('sisa_karbo', '0'); setVal('sisa_prohe', '0'); setVal('sisa_prona', '0'); setVal('sisa_sayur', '0'); setVal('sisa_buah', '0');
+
+            setChk('al_1_chk', true); setVal('al_1_res', 'Ya'); setVal('al_1_ket', 'Peralatan terpisah sesuai warna');
+            setChk('al_2_chk', true); setVal('al_2_res', 'Ya'); setVal('al_2_ket', 'Bersih & kering');
+            setChk('al_3_chk', true); setVal('al_3_res', 'Ya'); setVal('al_3_ket', 'Sanitasi baik');
+
+            setVal('dist_jam_masak', '08:30');
+            setVal('dist_jam_berangkat', '09:30');
+            setVal('dist_jam_tiba', '10:00');
+            setVal('dist_jam_konsumsi', '10:30');
+            setVal('dist_segel', 'Ya');
+            setVal('dist_pindah_kulkas', 'Ya');
+            setVal('dist_suhu_panas', '61.0'); setVal('dist_jam_panas', '09:20');
+            setVal('dist_suhu_dingin', '4.5'); setVal('dist_jam_dingin', '09:20');
+            setVal('dist_kendala_res', 'Tidak'); setVal('dist_kendala_ket', 'Lancar tanpa hambatan');
+
+            setVal('temuan_catatan', 'Seluruh proses persiapan hingga distribusi berjalan sesuai standar higienis SPPG.');
+            setRadio('keputusan_final', 'GO-produksi dapat dimulai / dilanjutkan');
+
+            showNotification('Contoh Data Terisi!', 'Seluruh formulir telah diisi dengan contoh data simulasi.', 'success');
+        }
+
+        function getFormData() {
+            const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
+            const getChk = (id) => document.getElementById(id) && document.getElementById(id).checked ? '[ ☑ ]' : '[ ☐ ]';
+            const getRadio = (name) => {
+                const el = document.querySelector(`input[name="${name}"]:checked`);
+                return el ? el.value : '';
+            };
+
+            return {
+                id: 'SPPG_' + Date.now(),
+                nama_sppg: getVal('nama_sppg') || '-',
+                kepala_sppg: getVal('kepala_sppg') || '-',
+                pengawas_keuangan: getVal('pengawas_keuangan') || '-',
+                pengawas_gizi: getVal('pengawas_gizi') || '-',
+                tanggal: getVal('tanggal_audit') || new Date().toISOString().split('T')[0],
+                jam_zoom: getVal('jam_zoom') || '-',
+                asisten_lapangan: getVal('asisten_lapangan') || '-',
+                chef: getVal('chef_nama') || '-',
+
+                pm_pd_pot: getVal('pm_pd_potensi') || '0',
+                pm_pd_lay: getVal('pm_pd_dilayani') || '0',
+                pm_3b_pot: getVal('pm_3b_potensi') || '0',
+                pm_3b_lay: getVal('pm_3b_dilayani') || '0',
+                pm_tot_pot: document.getElementById('pm_total_potensi')?.innerText || '0',
+                pm_tot_lay: document.getElementById('pm_total_dilayani')?.innerText || '0',
+
+                cert_slhs: getRadio('cert_slhs') || 'Tidak',
+                cert_halal: getRadio('cert_halal') || 'Tidak',
+                cert_bnsp: getRadio('cert_bnsp') || 'Tidak',
+
+                air_minum_sumber: getRadio('air_minum_src') || 'RO',
+                air_minum_tgl: getVal('air_minum_tgl') || '-',
+                air_minum_ph: getVal('air_minum_ph') || 'NA',
+                air_masak_sumber: getRadio('air_masak_src') || 'RO',
+                air_masak_tgl: getVal('air_masak_tgl') || '-',
+                air_masak_ph: getVal('air_masak_ph') || 'NA',
+
+                ruang_1_c: getChk('ruang_1_chk'), ruang_1_res: getVal('ruang_1_res'), ruang_1_ket: getVal('ruang_1_ket') || '-',
+                ruang_2_c: getChk('ruang_2_chk'), ruang_2_res: getVal('ruang_2_res'), ruang_2_ket: getVal('ruang_2_ket') || '-',
+                ruang_3_c: getChk('ruang_3_chk'), ruang_3_res: getVal('ruang_3_res'), ruang_3_ket: getVal('ruang_3_ket') || '-',
+                ruang_4_c: getChk('ruang_4_chk'), ruang_4_res: getVal('ruang_4_res'), ruang_4_ket: getVal('ruang_4_ket') || '-',
+
+                bb_karbo_c: getChk('bb_karbo_chk'), bb_karbo_j: getVal('bb_karbo_jml'), bb_karbo_k: getVal('bb_karbo_kual'), bb_karbo_w: getVal('bb_karbo_jam') || '-', bb_karbo_p: getVal('bb_karbo_penerima') || '-', bb_karbo_ket: getVal('bb_karbo_ket') || '-',
+                bb_prohe_c: getChk('bb_prohe_chk'), bb_prohe_j: getVal('bb_prohe_jml'), bb_prohe_k: getVal('bb_prohe_kual'), bb_prohe_w: getVal('bb_prohe_jam') || '-', bb_prohe_p: getVal('bb_prohe_penerima') || '-', bb_prohe_ket: getVal('bb_prohe_ket') || '-',
+                bb_prona_c: getChk('bb_prona_chk'), bb_prona_j: getVal('bb_prona_jml'), bb_prona_k: getVal('bb_prona_kual'), bb_prona_w: getVal('bb_prona_jam') || '-', bb_prona_p: getVal('bb_prona_penerima') || '-', bb_prona_ket: getVal('bb_prona_ket') || '-',
+                bb_buah_c: getChk('bb_buah_chk'), bb_buah_j: getVal('bb_buah_jml'), bb_buah_k: getVal('bb_buah_kual'), bb_buah_w: getVal('bb_buah_jam') || '-', bb_buah_p: getVal('bb_buah_penerima') || '-', bb_buah_ket: getVal('bb_buah_ket') || '-',
+                bb_sayur_c: getChk('bb_sayur_chk'), bb_sayur_j: getVal('bb_sayur_jml'), bb_sayur_k: getVal('bb_sayur_kual'), bb_sayur_w: getVal('bb_sayur_jam') || '-', bb_sayur_p: getVal('bb_sayur_penerima') || '-', bb_sayur_ket: getVal('bb_sayur_ket') || '-',
+
+                beku1_nama: getVal('suhu_beku1_nama') || '-', beku1_val: getVal('suhu_beku1_val') || '-', beku1_jam: getVal('suhu_beku1_jam') || '-',
+                beku2_nama: getVal('suhu_beku2_nama') || '-', beku2_val: getVal('suhu_beku2_val') || '-', beku2_jam: getVal('suhu_beku2_jam') || '-',
+                chiller_val: getVal('suhu_chiller_val') || '-', chiller_jam: getVal('suhu_chiller_jam') || '-',
+                freezer_val: getVal('suhu_freezer_val') || '-', freezer_jam: getVal('suhu_freezer_jam') || '-',
+
+                bm_1_c: getChk('bm_1_chk'), bm_1_res: getVal('bm_1_res'), bm_1_ket: getVal('bm_1_ket') || '-',
+                bm_2_c: getChk('bm_2_chk'), bm_2_res: getVal('bm_2_res'), bm_2_ket: getVal('bm_2_ket') || '-',
+                bm_3_c: getChk('bm_3_chk'), bm_3_res: getVal('bm_3_res'), bm_3_ket: getVal('bm_3_ket') || '-',
+
+                hp_1_c: getChk('hp_1_chk'), hp_1_res: getVal('hp_1_res'), hp_1_ket: getVal('hp_1_ket') || '-',
+                hp_2_c: getChk('hp_2_chk'), hp_2_res: getVal('hp_2_res'), hp_2_ket: getVal('hp_2_ket') || '-',
+                hp_3_c: getChk('hp_3_chk'), hp_3_res: getVal('hp_3_res'), hp_3_ket: getVal('hp_3_ket') || '-',
+
+                p_1_c: getChk('p_1_chk'), p_1_res: getVal('p_1_res'), p_1_ket: getVal('p_1_ket') || '-',
+                p_2_c: getChk('p_2_chk'), p_2_res: getVal('p_2_res'), p_2_ket: getVal('p_2_ket') || '-',
+                p_3_c: getChk('p_3_chk'), p_3_res: getVal('p_3_res'), p_3_ket: getVal('p_3_ket') || '-',
+
+                mr_1_c: getChk('mr_1_chk'), mr_1_res: getVal('mr_1_res'),
+                mr_2_c: getChk('mr_2_chk'), mr_2_res: getVal('mr_2_res'),
+                mr_3_c: getChk('mr_3_chk'), mr_3_res: getVal('mr_3_res'),
+                mr_4_c: getChk('mr_4_chk'), mr_4_res: getVal('mr_4_res'),
+                mr_5_c: getChk('mr_5_chk'), mr_5_res: getVal('mr_5_res'),
+
+                ho_1_c: getChk('ho_1_chk'), ho_1_res: getVal('ho_1_res'), ho_1_ket: getVal('ho_1_ket') || '-',
+                ho_2_c: getChk('ho_2_chk'), ho_2_res: getVal('ho_2_res'), ho_2_ket: getVal('ho_2_ket') || '-',
+                ho_3_c: getChk('ho_3_chk'), ho_3_res: getVal('ho_3_res'), ho_3_ket: getVal('ho_3_ket') || '-',
+
+                m_1_c: getChk('m_1_chk'), m_1_res: getVal('m_1_res'), m_1_ket: getVal('m_1_ket') || '-',
+                m_2_c: getChk('m_2_chk'), m_2_res: getVal('m_2_res'), m_2_suhu: getVal('m_2_suhu') || '-', m_2_jam: getVal('m_2_jam') || '-',
+                m_3_c: getChk('m_3_chk'), m_3_res: getVal('m_3_res'), m_3_ket: getVal('m_3_ket') || '-',
+                m_4_c: getChk('m_4_chk'), m_4_res: getVal('m_4_res'), m_4_ket: getVal('m_4_ket') || '-',
+
+                d_1_c: getChk('d_1_chk'), d_1_res: getVal('d_1_res'), d_1_ket: getVal('d_1_ket') || '-',
+                d_2_c: getChk('d_2_chk'), d_2_res: getVal('d_2_res'), d_2_suhu: getVal('d_2_suhu') || '-',
+                d_3_c: getChk('d_3_chk'), d_3_res: getVal('d_3_res'), d_3_durasi: getVal('d_3_durasi') || '-',
+                d_4_c: getChk('d_4_chk'), d_4_res: getVal('d_4_res'), d_4_ket: getVal('d_4_ket') || '-',
+
+                po_1_c: getChk('po_1_chk'), po_1_res: getVal('po_1_res'), po_1_ket: getVal('po_1_ket') || '-',
+                po_2_c: getChk('po_2_chk'), po_2_res: getVal('po_2_res'), po_2_suhu: getVal('po_2_suhu') || '-',
+                po_3_c: getChk('po_3_chk'), po_3_res: getVal('po_3_res'), po_3_oleh: getVal('po_3_oleh') || '-', po_3_jam: getVal('po_3_jam') || '-', po_3_hasil: getVal('po_3_hasil') || '-',
+                po_4_c: getChk('po_4_chk'), po_4_res: getVal('po_4_res'), po_4_ket: getVal('po_4_ket') || '-',
+                po_5_c: getChk('po_5_chk'), po_5_res: getVal('po_5_res'), po_5_ket: getVal('po_5_ket') || '-',
+                po_6_c: getChk('po_6_chk'), po_6_res: getVal('po_6_res'),
+
+                sisa_k: getVal('sisa_karbo') || '0',
+                sisa_ph: getVal('sisa_prohe') || '0',
+                sisa_pn: getVal('sisa_prona') || '0',
+                sisa_s: getVal('sisa_sayur') || '0',
+                sisa_b: getVal('sisa_buah') || '0',
+
+                al_1_c: getChk('al_1_chk'), al_1_res: getVal('al_1_res'), al_1_ket: getVal('al_1_ket') || '-',
+                al_2_c: getChk('al_2_chk'), al_2_res: getVal('al_2_res'), al_2_ket: getVal('al_2_ket') || '-',
+                al_3_c: getChk('al_3_chk'), al_3_res: getVal('al_3_res'), al_3_ket: getVal('al_3_ket') || '-',
+
+                dist_m: getVal('dist_jam_masak') || '-',
+                dist_b: getVal('dist_jam_berangkat') || '-',
+                dist_t: getVal('dist_jam_tiba') || '-',
+                dist_k: getVal('dist_jam_konsumsi') || '-',
+                dist_segel: getVal('dist_segel'),
+                dist_kulkas: getVal('dist_pindah_kulkas'),
+                dist_sp: getVal('dist_suhu_panas') || '-',
+                dist_jp: getVal('dist_jam_panas') || '-',
+                dist_sd: getVal('dist_suhu_dingin') || '-',
+                dist_jd: getVal('dist_jam_dingin') || '-',
+                dist_kendala_res: getVal('dist_kendala_res'),
+                dist_kendala_ket: getVal('dist_kendala_ket') || '-',
+
+                temuan: getVal('temuan_catatan') || 'Tidak ada temuan khusus.',
+                keputusan: getRadio('keputusan_final') || 'GO-produksi dapat dimulai / dilanjutkan'
+            };
+        }
+
+        function getStorageRecords() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            } catch(e) {
+                return window._inMemoryRecords || [];
+            }
+        }
+
+        function saveToStorage(data) {
+            try {
+                let records = getStorageRecords();
+                const idx = records.findIndex(r => r.id === data.id);
+                if (idx >= 0) {
+                    records[idx] = data;
+                } else {
+                    records.unshift(data);
+                }
+                setSafeStorage(STORAGE_KEY, JSON.stringify(records));
+            } catch (e) {
+                window._inMemoryRecords = window._inMemoryRecords || [];
+                const idx = window._inMemoryRecords.findIndex(r => r.id === data.id);
+                if (idx >= 0) window._inMemoryRecords[idx] = data;
+                else window._inMemoryRecords.unshift(data);
+            }
+        }
+
+        function clearStorageRecords() {
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+            } catch(e) {}
+            window._inMemoryRecords = [];
+        }
+
+        // Handle Form Submit Event
+        function handleFormSubmit(event) {
+            if (event) event.preventDefault();
+            const data = getFormData();
+            saveToStorage(data);
+            renderHistoryTable();
+            updateAnalytics();
+            
+            // Sync background to Drive if URL present
+            if (googleScriptUrl) {
+                uploadPDFToGoogleDrive(null, '', data);
+            }
+            
+            showNotification('Data Tersimpan!', 'Data checklist SPPG berhasil disimpan ke database.', 'success');
+        }
+
         function openGDriveModal() {
-            document.getElementById('gas_url_input').value = googleScriptUrl;
-            document.getElementById('gdriveModal').classList.remove('hidden');
+            const modal = document.getElementById('gdriveModal');
+            const input = document.getElementById('gas_url_input');
+            if (input) input.value = googleScriptUrl;
+            if (modal) modal.classList.remove('hidden');
         }
 
         function closeGDriveModal() {
-            document.getElementById('gdriveModal').classList.add('hidden');
+            const modal = document.getElementById('gdriveModal');
+            if (modal) modal.classList.add('hidden');
         }
 
         function saveGDriveConfig() {
-            const url = document.getElementById('gas_url_input').value.trim();
-            localStorage.setItem('SPPG_GAS_URL', url);
+            const input = document.getElementById('gas_url_input');
+            const url = input ? input.value.trim() : '';
+            setSafeStorage('SPPG_GAS_URL', url);
             googleScriptUrl = url;
             updateGDriveUIStatus();
             closeGDriveModal();
             showNotification('Google Drive Terhubung', 'URL Google Apps Script telah diperbarui.', 'success');
+            syncWithGoogleDrive(true);
         }
 
         function updateGDriveUIStatus() {
             const statusText = document.getElementById('gdrive-status-text');
+            if (!statusText) return;
             if (googleScriptUrl) {
                 statusText.innerText = 'Google Drive Aktif';
                 statusText.classList.add('text-emerald-400');
@@ -1836,37 +2272,104 @@ function doPost(e) {
             }
         }
 
-        // Upload PDF Blob directly to Google Drive folder
-        async function uploadPDFToGoogleDrive(pdfBlob, fileName) {
+        async function syncWithGoogleDrive(showToast = true) {
+            if (!googleScriptUrl) return;
+            
+            const badge = document.getElementById('sync_status_badge');
+            if (badge) {
+                badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 animate-pulse';
+                badge.innerText = 'Menyinkronkan...';
+            }
+
+            if (showToast) {
+                showNotification('Menyinkronkan...', 'Mengambil data terbaru dari Google Drive...', 'info');
+            }
+
+            try {
+                const response = await fetch(googleScriptUrl);
+                const resData = await response.json();
+
+                if (resData.status === 'success' && Array.isArray(resData.data)) {
+                    // Merge drive records with local records
+                    let localRecords = getStorageRecords();
+                    let map = new Map();
+                    
+                    // Local records first
+                    localRecords.forEach(r => map.set(r.id, r));
+                    
+                    // Remote records overwrite or add
+                    resData.data.forEach(r => {
+                        if (r && r.id) map.set(r.id, r);
+                    });
+
+                    let merged = Array.from(map.values());
+                    merged.sort((a,b) => (b.tanggal || '').localeCompare(a.tanggal || ''));
+
+                    setSafeStorage(STORAGE_KEY, JSON.stringify(merged));
+                    window._inMemoryRecords = merged;
+
+                    renderHistoryTable();
+                    updateAnalytics();
+
+                    if (badge) {
+                        badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800';
+                        badge.innerText = 'Terhubung Drive';
+                    }
+
+                    if (showToast) {
+                        showNotification('Sinkronisasi Berhasil!', `${resData.data.length} data berhasil diperbarui dari Google Drive.`, 'success');
+                    }
+                } else {
+                    if (badge) {
+                        badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500';
+                        badge.innerText = 'Disk Lokal';
+                    }
+                }
+            } catch (err) {
+                console.error('Drive sync failed:', err);
+                if (badge) {
+                    badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700';
+                    badge.innerText = 'Offline/Gagal Sync';
+                }
+            }
+        }
+
+        async function uploadPDFToGoogleDrive(pdfBlob, fileName, recordData = null) {
             if (!googleScriptUrl) return null;
 
             try {
-                showNotification('Mengunggah ke Drive...', 'Menyimpan berkas PDF ke folder Google Drive...', 'info');
+                showNotification('Menyimpan ke Drive...', 'Mengunggah file & data ke Google Drive...', 'info');
                 
-                // Convert Blob to Base64
-                const reader = new FileReader();
-                const base64Promise = new Promise((resolve) => {
-                    reader.onloadend = () => {
-                        const base64data = reader.result.split(',')[1];
-                        resolve(base64data);
-                    };
-                });
-                reader.readAsDataURL(pdfBlob);
-                const pdfBase64 = await base64Promise;
+                let pdfBase64 = '';
+                if (pdfBlob) {
+                    const reader = new FileReader();
+                    const base64Promise = new Promise((resolve) => {
+                        reader.onloadend = () => {
+                            const base64data = reader.result.split(',')[1];
+                            resolve(base64data);
+                        };
+                    });
+                    reader.readAsDataURL(pdfBlob);
+                    pdfBase64 = await base64Promise;
+                }
+
+                const payload = {
+                    folderId: GOOGLE_DRIVE_FOLDER_ID,
+                    fileName: fileName,
+                    pdfBase64: pdfBase64,
+                    record: recordData || null
+                };
 
                 const response = await fetch(googleScriptUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({
-                        folderId: GOOGLE_DRIVE_FOLDER_ID,
-                        fileName: fileName,
-                        pdfBase64: pdfBase64
-                    })
+                    body: JSON.stringify(payload)
                 });
 
                 const resData = await response.json();
                 if (resData.status === 'success') {
-                    showNotification('Tersimpan di Drive!', 'Berkas PDF berhasil disimpan di folder Google Drive Anda.', 'success');
+                    showNotification('Tersimpan di Drive!', 'Data & PDF berhasil tersimpan secara terpusat di Google Drive.', 'success');
+                    syncWithGoogleDrive(false);
                     return resData.fileUrl;
                 } else {
                     console.error('Drive upload error:', resData.message);
@@ -1878,40 +2381,42 @@ function doPost(e) {
             }
         }
 
-        // Tab Navigation Logic
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
 
-            document.getElementById(tabId).classList.remove('hidden');
-            document.getElementById(`nav-${tabId}`).classList.add('active');
+            const targetTab = document.getElementById(tabId);
+            const targetNav = document.getElementById(`nav-${tabId}`);
+            if (targetTab) targetTab.classList.remove('hidden');
+            if (targetNav) targetNav.classList.add('active');
 
-            if(tabId === 'history-tab') {
+            if (tabId === 'history-tab') {
                 renderHistoryTable();
+                if (googleScriptUrl) {
+                    syncWithGoogleDrive(false);
+                }
             } else if (tabId === 'analytics-tab') {
                 updateAnalytics();
             }
         }
 
-        // Auto-calculate PM Total
         function calculatePMTotal() {
-            const pdPot = parseInt(document.getElementById('pm_pd_potensi').value) || 0;
-            const pdLay = parseInt(document.getElementById('pm_pd_dilayani').value) || 0;
-            const b3Pot = parseInt(document.getElementById('pm_3b_potensi').value) || 0;
-            const b3Lay = parseInt(document.getElementById('pm_3b_dilayani').value) || 0;
+            const pdPot = parseInt(document.getElementById('pm_pd_potensi')?.value) || 0;
+            const pdLay = parseInt(document.getElementById('pm_pd_dilayani')?.value) || 0;
+            const b3Pot = parseInt(document.getElementById('pm_3b_potensi')?.value) || 0;
+            const b3Lay = parseInt(document.getElementById('pm_3b_dilayani')?.value) || 0;
 
-            document.getElementById('pm_total_potensi').innerText = (pdPot + b3Pot).toLocaleString();
-            document.getElementById('pm_total_dilayani').innerText = (pdLay + b3Lay).toLocaleString();
+            setTxt('pm_total_potensi', (pdPot + b3Pot).toLocaleString());
+            setTxt('pm_total_dilayani', (pdLay + b3Lay).toLocaleString());
         }
 
-        // Helper function to generate PDF reliably regardless of page scroll position
         function generatePDF(data, callback) {
             populatePDFTemplate(data);
             const element = document.getElementById('pdfRenderTemplate');
 
             const fileName = `Checklist_SPPG_${(data.nama_sppg || 'Pusat').replace(/\s+/g, '_')}_${data.tanggal}.pdf`;
             const opt = {
-                margin:       [8, 8, 8, 8],
+                margin:       0,
                 filename:     fileName,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { 
@@ -1919,7 +2424,10 @@ function doPost(e) {
                     useCORS: true, 
                     logging: false,
                     scrollX: 0,
-                    scrollY: 0
+                    scrollY: 0,
+                    x: 0,
+                    y: 0,
+                    windowWidth: 794
                 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 pagebreak:    { mode: ['css', 'legacy'] }
@@ -1928,15 +2436,18 @@ function doPost(e) {
             showNotification('Memproses PDF...', 'Mohon tunggu, dokumen PDF resmi sedang dibuat.', 'info');
 
             setTimeout(() => {
+                if (typeof html2pdf === 'undefined') {
+                    showNotification('Library PDF belum siap', 'Gagal memuat html2pdf. Silakan muat ulang halaman.', 'warning');
+                    return;
+                }
+
                 const worker = html2pdf().set(opt).from(element);
                 
-                // Save locally first
                 worker.save().then(async () => {
                     showNotification('PDF Berhasil Diunduh!', 'File PDF tersimpan di perangkat.', 'success');
                     
-                    // Generate Blob for Google Drive upload
                     const pdfBlob = await worker.output('blob');
-                    const driveUrl = await uploadPDFToGoogleDrive(pdfBlob, fileName);
+                    const driveUrl = await uploadPDFToGoogleDrive(pdfBlob, fileName, data);
                     if (driveUrl) {
                         data.driveUrl = driveUrl;
                         saveToStorage(data);
@@ -1951,190 +2462,124 @@ function doPost(e) {
             }, 150);
         }
 
-        // Save & Download Official PDF Action
         function saveAndDownloadPDF() {
             const data = getFormData();
-            
-            // 1. Save data to storage
             saveToStorage(data);
             renderHistoryTable();
             updateAnalytics();
-
-            // 2. Render PDF & upload to Drive if configured
             generatePDF(data);
         }
 
         function populatePDFTemplate(data) {
-            document.getElementById('pdf_nama_sppg').innerText = data.nama_sppg;
-            document.getElementById('pdf_kepala_sppg').innerText = data.kepala_sppg;
-            document.getElementById('pdf_pengawas_keuangan').innerText = data.pengawas_keuangan;
-            document.getElementById('pdf_pengawas_gizi').innerText = data.pengawas_gizi;
-            document.getElementById('pdf_tanggal').innerText = data.tanggal;
-            document.getElementById('pdf_asisten_lapangan').innerText = data.asisten_lapangan;
-            document.getElementById('pdf_jam_zoom').innerText = data.jam_zoom;
-            document.getElementById('pdf_chef').innerText = data.chef;
+            setTxt('pdf_nama_sppg', data.nama_sppg);
+            setTxt('pdf_kepala_sppg', data.kepala_sppg);
+            setTxt('pdf_pengawas_keuangan', data.pengawas_keuangan);
+            setTxt('pdf_pengawas_gizi', data.pengawas_gizi);
+            setTxt('pdf_tanggal', data.tanggal);
+            setTxt('pdf_asisten_lapangan', data.asisten_lapangan);
+            setTxt('pdf_jam_zoom', data.jam_zoom);
+            setTxt('pdf_chef', data.chef);
 
-            document.getElementById('pdf_pm_pd_pot').innerText = data.pm_pd_pot;
-            document.getElementById('pdf_pm_pd_lay').innerText = data.pm_pd_lay;
-            document.getElementById('pdf_pm_3b_pot').innerText = data.pm_3b_pot;
-            document.getElementById('pdf_pm_3b_lay').innerText = data.pm_3b_lay;
-            document.getElementById('pdf_pm_tot_pot').innerText = data.pm_tot_pot;
-            document.getElementById('pdf_pm_tot_lay').innerText = data.pm_tot_lay;
+            setTxt('pdf_pm_pd_pot', data.pm_pd_pot);
+            setTxt('pdf_pm_pd_lay', data.pm_pd_lay);
+            setTxt('pdf_pm_3b_pot', data.pm_3b_pot);
+            setTxt('pdf_pm_3b_lay', data.pm_3b_lay);
+            setTxt('pdf_pm_tot_pot', data.pm_tot_pot);
+            setTxt('pdf_pm_tot_lay', data.pm_tot_lay);
 
-            document.getElementById('pdf_slhs').innerText = `[ ${data.cert_slhs} ]`;
-            document.getElementById('pdf_halal').innerText = `[ ${data.cert_halal} ]`;
-            document.getElementById('pdf_bnsp').innerText = `[ ${data.cert_bnsp} ]`;
+            setTxt('pdf_slhs', `[ ${data.cert_slhs} ]`);
+            setTxt('pdf_halal', `[ ${data.cert_halal} ]`);
+            setTxt('pdf_bnsp', `[ ${data.cert_bnsp} ]`);
 
-            document.getElementById('pdf_air_minum_sumber').innerText = data.air_minum_sumber;
-            document.getElementById('pdf_air_minum_tgl').innerText = data.air_minum_tgl;
-            document.getElementById('pdf_air_minum_ph').innerText = data.air_minum_ph;
-            document.getElementById('pdf_air_masak_sumber').innerText = data.air_masak_sumber;
-            document.getElementById('pdf_air_masak_tgl').innerText = data.air_masak_tgl;
-            document.getElementById('pdf_air_masak_ph').innerText = data.air_masak_ph;
+            setTxt('pdf_air_minum_sumber', data.air_minum_sumber);
+            setTxt('pdf_air_minum_tgl', data.air_minum_tgl);
+            setTxt('pdf_air_minum_ph', data.air_minum_ph);
+            setTxt('pdf_air_masak_sumber', data.air_masak_sumber);
+            setTxt('pdf_air_masak_tgl', data.air_masak_tgl);
+            setTxt('pdf_air_masak_ph', data.air_masak_ph);
 
-            document.getElementById('pdf_r1_c').innerText = data.ruang_1_c;
-            document.getElementById('pdf_r1_res').innerText = data.ruang_1_res;
-            document.getElementById('pdf_r1_ket').innerText = data.ruang_1_ket;
-            document.getElementById('pdf_r2_c').innerText = data.ruang_2_c;
-            document.getElementById('pdf_r2_res').innerText = data.ruang_2_res;
-            document.getElementById('pdf_r2_ket').innerText = data.ruang_2_ket;
-            document.getElementById('pdf_r3_c').innerText = data.ruang_3_c;
-            document.getElementById('pdf_r3_res').innerText = data.ruang_3_res;
-            document.getElementById('pdf_r3_ket').innerText = data.ruang_3_ket;
-            document.getElementById('pdf_r4_c').innerText = data.ruang_4_c;
-            document.getElementById('pdf_r4_res').innerText = data.ruang_4_res;
-            document.getElementById('pdf_r4_ket').innerText = data.ruang_4_ket;
+            setTxt('pdf_r1_c', data.ruang_1_c); setTxt('pdf_r1_res', data.ruang_1_res); setTxt('pdf_r1_ket', data.ruang_1_ket);
+            setTxt('pdf_r2_c', data.ruang_2_c); setTxt('pdf_r2_res', data.ruang_2_res); setTxt('pdf_r2_ket', data.ruang_2_ket);
+            setTxt('pdf_r3_c', data.ruang_3_c); setTxt('pdf_r3_res', data.ruang_3_res); setTxt('pdf_r3_ket', data.ruang_3_ket);
+            setTxt('pdf_r4_c', data.ruang_4_c); setTxt('pdf_r4_res', data.ruang_4_res); setTxt('pdf_r4_ket', data.ruang_4_ket);
 
-            document.getElementById('pdf_bb_1_c').innerText = data.bb_karbo_c;
-            document.getElementById('pdf_bb_1_j').innerText = data.bb_karbo_j;
-            document.getElementById('pdf_bb_1_k').innerText = data.bb_karbo_k;
-            document.getElementById('pdf_bb_1_w').innerText = data.bb_karbo_w;
-            document.getElementById('pdf_bb_1_p').innerText = data.bb_karbo_p;
-            document.getElementById('pdf_bb_1_ket').innerText = data.bb_karbo_ket;
+            setTxt('pdf_bb_1_c', data.bb_karbo_c); setTxt('pdf_bb_1_j', data.bb_karbo_j); setTxt('pdf_bb_1_k', data.bb_karbo_k); setTxt('pdf_bb_1_w', data.bb_karbo_w); setTxt('pdf_bb_1_p', data.bb_karbo_p); setTxt('pdf_bb_1_ket', data.bb_karbo_ket);
+            setTxt('pdf_bb_2_c', data.bb_prohe_c); setTxt('pdf_bb_2_j', data.bb_prohe_j); setTxt('pdf_bb_2_k', data.bb_prohe_k); setTxt('pdf_bb_2_w', data.bb_prohe_w); setTxt('pdf_bb_2_p', data.bb_prohe_p); setTxt('pdf_bb_2_ket', data.bb_prohe_ket);
+            setTxt('pdf_bb_3_c', data.bb_prona_c); setTxt('pdf_bb_3_j', data.bb_prona_j); setTxt('pdf_bb_3_k', data.bb_prona_k); setTxt('pdf_bb_3_w', data.bb_prona_w); setTxt('pdf_bb_3_p', data.bb_prona_p); setTxt('pdf_bb_3_ket', data.bb_prona_ket);
+            setTxt('pdf_bb_4_c', data.bb_buah_c); setTxt('pdf_bb_4_j', data.bb_buah_j); setTxt('pdf_bb_4_k', data.bb_buah_k); setTxt('pdf_bb_4_w', data.bb_buah_w); setTxt('pdf_bb_4_p', data.bb_buah_p); setTxt('pdf_bb_4_ket', data.bb_buah_ket);
+            setTxt('pdf_bb_5_c', data.bb_sayur_c); setTxt('pdf_bb_5_j', data.bb_sayur_j); setTxt('pdf_bb_5_k', data.bb_sayur_k); setTxt('pdf_bb_5_w', data.bb_sayur_w); setTxt('pdf_bb_5_p', data.bb_sayur_p); setTxt('pdf_bb_5_ket', data.bb_sayur_ket);
 
-            document.getElementById('pdf_bb_2_c').innerText = data.bb_prohe_c;
-            document.getElementById('pdf_bb_2_j').innerText = data.bb_prohe_j;
-            document.getElementById('pdf_bb_2_k').innerText = data.bb_prohe_k;
-            document.getElementById('pdf_bb_2_w').innerText = data.bb_prohe_w;
-            document.getElementById('pdf_bb_2_p').innerText = data.bb_prohe_p;
-            document.getElementById('pdf_bb_2_ket').innerText = data.bb_prohe_ket;
+            setTxt('pdf_beku1_n', data.beku1_nama); setTxt('pdf_beku1_v', data.beku1_val); setTxt('pdf_beku1_j', data.beku1_jam);
+            setTxt('pdf_beku2_n', data.beku2_nama); setTxt('pdf_beku2_v', data.beku2_val); setTxt('pdf_beku2_j', data.beku2_jam);
+            setTxt('pdf_chiller_v', data.chiller_val); setTxt('pdf_chiller_j', data.chiller_jam);
+            setTxt('pdf_freezer_v', data.freezer_val); setTxt('pdf_freezer_j', data.freezer_jam);
 
-            document.getElementById('pdf_bb_3_c').innerText = data.bb_prona_c;
-            document.getElementById('pdf_bb_3_j').innerText = data.bb_prona_j;
-            document.getElementById('pdf_bb_3_k').innerText = data.bb_prona_k;
-            document.getElementById('pdf_bb_3_w').innerText = data.bb_prona_w;
-            document.getElementById('pdf_bb_3_p').innerText = data.bb_prona_p;
-            document.getElementById('pdf_bb_3_ket').innerText = data.bb_prona_ket;
+            setTxt('pdf_bm_1_c', data.bm_1_c); setTxt('pdf_bm_1_res', data.bm_1_res); setTxt('pdf_bm_1_ket', data.bm_1_ket);
+            setTxt('pdf_bm_2_c', data.bm_2_c); setTxt('pdf_bm_2_res', data.bm_2_res); setTxt('pdf_bm_2_ket', data.bm_2_ket);
+            setTxt('pdf_bm_3_c', data.bm_3_c); setTxt('pdf_bm_3_res', data.bm_3_res); setTxt('pdf_bm_3_ket', data.bm_3_ket);
 
-            document.getElementById('pdf_bb_4_c').innerText = data.bb_buah_c;
-            document.getElementById('pdf_bb_4_j').innerText = data.bb_buah_j;
-            document.getElementById('pdf_bb_4_k').innerText = data.bb_buah_k;
-            document.getElementById('pdf_bb_4_w').innerText = data.bb_buah_w;
-            document.getElementById('pdf_bb_4_p').innerText = data.bb_buah_p;
-            document.getElementById('pdf_bb_4_ket').innerText = data.bb_buah_ket;
+            setTxt('pdf_hp_1_c', data.hp_1_c); setTxt('pdf_hp_1_res', data.hp_1_res); setTxt('pdf_hp_1_ket', data.hp_1_ket);
+            setTxt('pdf_hp_2_c', data.hp_2_c); setTxt('pdf_hp_2_res', data.hp_2_res); setTxt('pdf_hp_2_ket', data.hp_2_ket);
+            setTxt('pdf_hp_3_c', data.hp_3_c); setTxt('pdf_hp_3_res', data.hp_3_res); setTxt('pdf_hp_3_ket', data.hp_3_ket);
 
-            document.getElementById('pdf_bb_5_c').innerText = data.bb_sayur_c;
-            document.getElementById('pdf_bb_5_j').innerText = data.bb_sayur_j;
-            document.getElementById('pdf_bb_5_k').innerText = data.bb_sayur_k;
-            document.getElementById('pdf_bb_5_w').innerText = data.bb_sayur_w;
-            document.getElementById('pdf_bb_5_p').innerText = data.bb_sayur_p;
-            document.getElementById('pdf_bb_5_ket').innerText = data.bb_sayur_ket;
+            setTxt('pdf_p_1_c', data.p_1_c); setTxt('pdf_p_1_res', data.p_1_res); setTxt('pdf_p_1_ket', data.p_1_ket);
+            setTxt('pdf_p_2_c', data.p_2_c); setTxt('pdf_p_2_res', data.p_2_res); setTxt('pdf_p_2_ket', data.p_2_ket);
+            setTxt('pdf_p_3_c', data.p_3_c); setTxt('pdf_p_3_res', data.p_3_res); setTxt('pdf_p_3_ket', data.p_3_ket);
 
-            document.getElementById('pdf_beku1_n').innerText = data.beku1_nama;
-            document.getElementById('pdf_beku1_v').innerText = data.beku1_val;
-            document.getElementById('pdf_beku1_j').innerText = data.beku1_jam;
-            document.getElementById('pdf_beku2_n').innerText = data.beku2_nama;
-            document.getElementById('pdf_beku2_v').innerText = data.beku2_val;
-            document.getElementById('pdf_beku2_j').innerText = data.beku2_jam;
-            document.getElementById('pdf_chiller_v').innerText = data.chiller_val;
-            document.getElementById('pdf_chiller_j').innerText = data.chiller_jam;
-            document.getElementById('pdf_freezer_v').innerText = data.freezer_val;
-            document.getElementById('pdf_freezer_j').innerText = data.freezer_jam;
+            setTxt('pdf_mr_1_c', data.mr_1_c); setTxt('pdf_mr_1_res', data.mr_1_res);
+            setTxt('pdf_mr_2_c', data.mr_2_c); setTxt('pdf_mr_2_res', data.mr_2_res);
+            setTxt('pdf_mr_3_c', data.mr_3_c); setTxt('pdf_mr_3_res', data.mr_3_res);
+            setTxt('pdf_mr_4_c', data.mr_4_c); setTxt('pdf_mr_4_res', data.mr_4_res);
+            setTxt('pdf_mr_5_c', data.mr_5_c); setTxt('pdf_mr_5_res', data.mr_5_res);
 
-            document.getElementById('pdf_bm_1_c').innerText = data.bm_1_c;
-            document.getElementById('pdf_bm_1_res').innerText = data.bm_1_res;
-            document.getElementById('pdf_bm_1_ket').innerText = data.bm_1_ket;
-            document.getElementById('pdf_bm_2_c').innerText = data.bm_2_c;
-            document.getElementById('pdf_bm_2_res').innerText = data.bm_2_res;
-            document.getElementById('pdf_bm_2_ket').innerText = data.bm_2_ket;
-            document.getElementById('pdf_bm_3_c').innerText = data.bm_3_c;
-            document.getElementById('pdf_bm_3_res').innerText = data.bm_3_res;
-            document.getElementById('pdf_bm_3_ket').innerText = data.bm_3_ket;
+            setTxt('pdf_ho_1_c', data.ho_1_c); setTxt('pdf_ho_1_res', data.ho_1_res); setTxt('pdf_ho_1_ket', data.ho_1_ket);
+            setTxt('pdf_ho_2_c', data.ho_2_c); setTxt('pdf_ho_2_res', data.ho_2_res); setTxt('pdf_ho_2_ket', data.ho_2_ket);
+            setTxt('pdf_ho_3_c', data.ho_3_c); setTxt('pdf_ho_3_res', data.ho_3_res); setTxt('pdf_ho_3_ket', data.ho_3_ket);
 
-            document.getElementById('pdf_hp_1_c').innerText = data.hp_1_c;
-            document.getElementById('pdf_hp_1_res').innerText = data.hp_1_res;
-            document.getElementById('pdf_hp_1_ket').innerText = data.hp_1_ket;
-            document.getElementById('pdf_hp_2_c').innerText = data.hp_2_c;
-            document.getElementById('pdf_hp_2_res').innerText = data.hp_2_res;
-            document.getElementById('pdf_hp_2_ket').innerText = data.hp_2_ket;
-            document.getElementById('pdf_hp_3_c').innerText = data.hp_3_c;
-            document.getElementById('pdf_hp_3_res').innerText = data.hp_3_res;
-            document.getElementById('pdf_hp_3_ket').innerText = data.hp_3_ket;
+            setTxt('pdf_m_1_c', data.m_1_c); setTxt('pdf_m_1_res', data.m_1_res); setTxt('pdf_m_1_ket', data.m_1_ket);
+            setTxt('pdf_m_2_c', data.m_2_c); setTxt('pdf_m_2_res', data.m_2_res); setTxt('pdf_m_2_suhu', data.m_2_suhu); setTxt('pdf_m_2_jam', data.m_2_jam);
+            setTxt('pdf_m_3_c', data.m_3_c); setTxt('pdf_m_3_res', data.m_3_res); setTxt('pdf_m_3_ket', data.m_3_ket);
+            setTxt('pdf_m_4_c', data.m_4_c); setTxt('pdf_m_4_res', data.m_4_res); setTxt('pdf_m_4_ket', data.m_4_ket);
 
-            document.getElementById('pdf_p_1_c').innerText = data.p_1_c;
-            document.getElementById('pdf_p_1_res').innerText = data.p_1_res;
-            document.getElementById('pdf_p_1_ket').innerText = data.p_1_ket;
-            document.getElementById('pdf_p_2_c').innerText = data.p_2_c;
-            document.getElementById('pdf_p_2_res').innerText = data.p_2_res;
-            document.getElementById('pdf_p_2_ket').innerText = data.p_2_ket;
-            document.getElementById('pdf_p_3_c').innerText = data.p_3_c;
-            document.getElementById('pdf_p_3_res').innerText = data.p_3_res;
-            document.getElementById('pdf_p_3_ket').innerText = data.p_3_ket;
+            setTxt('pdf_d_1_c', data.d_1_c); setTxt('pdf_d_1_res', data.d_1_res); setTxt('pdf_d_1_ket', data.d_1_ket);
+            setTxt('pdf_d_2_c', data.d_2_c); setTxt('pdf_d_2_res', data.d_2_res); setTxt('pdf_d_2_suhu', data.d_2_suhu);
+            setTxt('pdf_d_3_c', data.d_3_c); setTxt('pdf_d_3_res', data.d_3_res); setTxt('pdf_d_3_durasi', data.d_3_durasi);
+            setTxt('pdf_d_4_c', data.d_4_c); setTxt('pdf_d_4_res', data.d_4_res); setTxt('pdf_d_4_ket', data.d_4_ket);
 
-            document.getElementById('pdf_mr_1_c').innerText = data.mr_1_c; document.getElementById('pdf_mr_1_res').innerText = data.mr_1_res;
-            document.getElementById('pdf_mr_2_c').innerText = data.mr_2_c; document.getElementById('pdf_mr_2_res').innerText = data.mr_2_res;
-            document.getElementById('pdf_mr_3_c').innerText = data.mr_3_c; document.getElementById('pdf_mr_3_res').innerText = data.mr_3_res;
-            document.getElementById('pdf_mr_4_c').innerText = data.mr_4_c; document.getElementById('pdf_mr_4_res').innerText = data.mr_4_res;
-            document.getElementById('pdf_mr_5_c').innerText = data.mr_5_c; document.getElementById('pdf_mr_5_res').innerText = data.mr_5_res;
+            setTxt('pdf_po_1_c', data.po_1_c); setTxt('pdf_po_1_res', data.po_1_res); setTxt('pdf_po_1_ket', data.po_1_ket);
+            setTxt('pdf_po_2_c', data.po_2_c); setTxt('pdf_po_2_res', data.po_2_res); setTxt('pdf_po_2_suhu', data.po_2_suhu);
+            setTxt('pdf_po_3_c', data.po_3_c); setTxt('pdf_po_3_res', data.po_3_res); setTxt('pdf_po_3_oleh', data.po_3_oleh); setTxt('pdf_po_3_jam', data.po_3_jam); setTxt('pdf_po_3_hasil', data.po_3_hasil);
+            setTxt('pdf_po_4_c', data.po_4_c); setTxt('pdf_po_4_res', data.po_4_res); setTxt('pdf_po_4_ket', data.po_4_ket);
+            setTxt('pdf_po_5_c', data.po_5_c); setTxt('pdf_po_5_res', data.po_5_res); setTxt('pdf_po_5_ket', data.po_5_ket);
+            setTxt('pdf_po_6_c', data.po_6_c); setTxt('pdf_po_6_res', data.po_6_res);
+            setTxt('pdf_sisa_k', data.sisa_k); setTxt('pdf_sisa_ph', data.sisa_ph); setTxt('pdf_sisa_pn', data.sisa_pn); setTxt('pdf_sisa_s', data.sisa_s); setTxt('pdf_sisa_b', data.sisa_b);
 
-            document.getElementById('pdf_ho_1_c').innerText = data.ho_1_c; document.getElementById('pdf_ho_1_res').innerText = data.ho_1_res; document.getElementById('pdf_ho_1_ket').innerText = data.ho_1_ket;
-            document.getElementById('pdf_ho_2_c').innerText = data.ho_2_c; document.getElementById('pdf_ho_2_res').innerText = data.ho_2_res; document.getElementById('pdf_ho_2_ket').innerText = data.ho_2_ket;
-            document.getElementById('pdf_ho_3_c').innerText = data.ho_3_c; document.getElementById('pdf_ho_3_res').innerText = data.ho_3_res; document.getElementById('pdf_ho_3_ket').innerText = data.ho_3_ket;
+            setTxt('pdf_al_1_c', data.al_1_c); setTxt('pdf_al_1_res', data.al_1_res); setTxt('pdf_al_1_ket', data.al_1_ket);
+            setTxt('pdf_al_2_c', data.al_2_c); setTxt('pdf_al_2_res', data.al_2_res); setTxt('pdf_al_2_ket', data.al_2_ket);
+            setTxt('pdf_al_3_c', data.al_3_c); setTxt('pdf_al_3_res', data.al_3_res); setTxt('pdf_al_3_ket', data.al_3_ket);
 
-            document.getElementById('pdf_m_1_c').innerText = data.m_1_c; document.getElementById('pdf_m_1_res').innerText = data.m_1_res; document.getElementById('pdf_m_1_ket').innerText = data.m_1_ket;
-            document.getElementById('pdf_m_2_c').innerText = data.m_2_c; document.getElementById('pdf_m_2_res').innerText = data.m_2_res; document.getElementById('pdf_m_2_suhu').innerText = data.m_2_suhu; document.getElementById('pdf_m_2_jam').innerText = data.m_2_jam;
-            document.getElementById('pdf_m_3_c').innerText = data.m_3_c; document.getElementById('pdf_m_3_res').innerText = data.m_3_res; document.getElementById('pdf_m_3_ket').innerText = data.m_3_ket;
-            document.getElementById('pdf_m_4_c').innerText = data.m_4_c; document.getElementById('pdf_m_4_res').innerText = data.m_4_res; document.getElementById('pdf_m_4_ket').innerText = data.m_4_ket;
+            setTxt('pdf_dist_m', data.dist_m);
+            setTxt('pdf_dist_b', data.dist_b);
+            setTxt('pdf_dist_t', data.dist_t);
+            setTxt('pdf_dist_k', data.dist_k);
+            setTxt('pdf_dist_segel', data.dist_segel);
+            setTxt('pdf_dist_kulkas', data.dist_kulkas);
+            setTxt('pdf_dist_sp', data.dist_sp);
+            setTxt('pdf_dist_jp', data.dist_jp);
+            setTxt('pdf_dist_sd', data.dist_sd);
+            setTxt('pdf_dist_jd', data.dist_jd);
+            setTxt('pdf_dist_kendala_res', data.dist_kendala_res);
+            setTxt('pdf_dist_kendala_ket', data.dist_kendala_ket);
 
-            document.getElementById('pdf_d_1_c').innerText = data.d_1_c; document.getElementById('pdf_d_1_res').innerText = data.d_1_res; document.getElementById('pdf_d_1_ket').innerText = data.d_1_ket;
-            document.getElementById('pdf_d_2_c').innerText = data.d_2_c; document.getElementById('pdf_d_2_res').innerText = data.d_2_res; document.getElementById('pdf_d_2_suhu').innerText = data.d_2_suhu;
-            document.getElementById('pdf_d_3_c').innerText = data.d_3_c; document.getElementById('pdf_d_3_res').innerText = data.d_3_res; document.getElementById('pdf_d_3_durasi').innerText = data.d_3_durasi;
-            document.getElementById('pdf_d_4_c').innerText = data.d_4_c; document.getElementById('pdf_d_4_res').innerText = data.d_4_res; document.getElementById('pdf_d_4_ket').innerText = data.d_4_ket;
-
-            document.getElementById('pdf_po_1_c').innerText = data.po_1_c; document.getElementById('pdf_po_1_res').innerText = data.po_1_res; document.getElementById('pdf_po_1_ket').innerText = data.po_1_ket;
-            document.getElementById('pdf_po_2_c').innerText = data.po_2_c; document.getElementById('pdf_po_2_res').innerText = data.po_2_res; document.getElementById('pdf_po_2_suhu').innerText = data.po_2_suhu;
-            document.getElementById('pdf_po_3_c').innerText = data.po_3_c; document.getElementById('pdf_po_3_res').innerText = data.po_3_res; document.getElementById('pdf_po_3_oleh').innerText = data.po_3_oleh; document.getElementById('pdf_po_3_jam').innerText = data.po_3_jam; document.getElementById('pdf_po_3_hasil').innerText = data.po_3_hasil;
-            document.getElementById('pdf_po_4_c').innerText = data.po_4_c; document.getElementById('pdf_po_4_res').innerText = data.po_4_res; document.getElementById('pdf_po_4_ket').innerText = data.po_4_ket;
-            document.getElementById('pdf_po_5_c').innerText = data.po_5_c; document.getElementById('pdf_po_5_res').innerText = data.po_5_res; document.getElementById('pdf_po_5_ket').innerText = data.po_5_ket;
-            document.getElementById('pdf_po_6_c').innerText = data.po_6_c; document.getElementById('pdf_po_6_res').innerText = data.po_6_res;
-            document.getElementById('pdf_sisa_k').innerText = data.sisa_k; document.getElementById('pdf_sisa_ph').innerText = data.sisa_ph; document.getElementById('pdf_sisa_pn').innerText = data.sisa_pn; document.getElementById('pdf_sisa_s').innerText = data.sisa_s; document.getElementById('pdf_sisa_b').innerText = data.sisa_b;
-
-            document.getElementById('pdf_al_1_c').innerText = data.al_1_c; document.getElementById('pdf_al_1_res').innerText = data.al_1_res; document.getElementById('pdf_al_1_ket').innerText = data.al_1_ket;
-            document.getElementById('pdf_al_2_c').innerText = data.al_2_c; document.getElementById('pdf_al_2_res').innerText = data.al_2_res; document.getElementById('pdf_al_2_ket').innerText = data.al_2_ket;
-            document.getElementById('pdf_al_3_c').innerText = data.al_3_c; document.getElementById('pdf_al_3_res').innerText = data.al_3_res; document.getElementById('pdf_al_3_ket').innerText = data.al_3_ket;
-
-            document.getElementById('pdf_dist_m').innerText = data.dist_m;
-            document.getElementById('pdf_dist_b').innerText = data.dist_b;
-            document.getElementById('pdf_dist_t').innerText = data.dist_t;
-            document.getElementById('pdf_dist_k').innerText = data.dist_k;
-            document.getElementById('pdf_dist_segel').innerText = data.dist_segel;
-            document.getElementById('pdf_dist_kulkas').innerText = data.dist_kulkas;
-            document.getElementById('pdf_dist_sp').innerText = data.dist_sp;
-            document.getElementById('pdf_dist_jp').innerText = data.dist_jp;
-            document.getElementById('pdf_dist_sd').innerText = data.dist_sd;
-            document.getElementById('pdf_dist_jd').innerText = data.dist_jd;
-            document.getElementById('pdf_dist_kendala_res').innerText = data.dist_kendala_res;
-            document.getElementById('pdf_dist_kendala_ket').innerText = data.dist_kendala_ket;
-
-            document.getElementById('pdf_temuan_catatan').innerText = data.temuan;
-            document.getElementById('pdf_keputusan_final').innerText = data.keputusan;
+            setTxt('pdf_temuan_catatan', data.temuan);
+            setTxt('pdf_keputusan_final', data.keputusan);
         }
 
         function renderHistoryTable() {
             const tbody = document.getElementById('historyTableBody');
             if (!tbody) return;
 
-            const records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const records = getStorageRecords();
             const startDate = document.getElementById('filter_start')?.value;
             const endDate = document.getElementById('filter_end')?.value;
 
@@ -2146,9 +2591,7 @@ function doPost(e) {
                 filtered = filtered.filter(r => r.tanggal <= endDate);
             }
 
-            if (document.getElementById('recordCount')) {
-                document.getElementById('recordCount').innerText = filtered.length;
-            }
+            setTxt('recordCount', filtered.length);
 
             if (filtered.length === 0) {
                 tbody.innerHTML = `
@@ -2164,8 +2607,8 @@ function doPost(e) {
 
             tbody.innerHTML = filtered.map(r => {
                 let badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
-                if (r.keputusan.includes('CATATAN')) badgeClass = 'bg-amber-100 text-amber-800 border-amber-300';
-                if (r.keputusan.includes('NO-GO')) badgeClass = 'bg-rose-100 text-rose-800 border-rose-300';
+                if (r.keputusan && r.keputusan.includes('CATATAN')) badgeClass = 'bg-amber-100 text-amber-800 border-amber-300';
+                if (r.keputusan && r.keputusan.includes('NO-GO')) badgeClass = 'bg-rose-100 text-rose-800 border-rose-300';
 
                 const driveBtn = r.driveUrl ? `
                     <a href="${r.driveUrl}" target="_blank" title="Buka di Google Drive" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition">
@@ -2187,10 +2630,10 @@ function doPost(e) {
                         <td class="p-3 text-center">
                             <div class="flex items-center justify-center space-x-1">
                                 ${driveBtn}
-                                <button type="button" onclick="downloadPDFFromHistory('${r.id}')" title="Download PDF" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
+                                <button type="button" onclick="downloadPDFFromHistory('${r.id}')" title="Download PDF" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition cursor-pointer">
                                     <i class="fa-solid fa-file-pdf text-base"></i>
                                 </button>
-                                <button type="button" onclick="deleteRecord('${r.id}')" title="Hapus Data" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition">
+                                <button type="button" onclick="deleteRecord('${r.id}')" title="Hapus Data" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition cursor-pointer">
                                     <i class="fa-solid fa-trash-can text-base"></i>
                                 </button>
                             </div>
@@ -2201,29 +2644,30 @@ function doPost(e) {
         }
 
         function downloadPDFFromHistory(id) {
-            const records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const records = getStorageRecords();
             const data = records.find(r => r.id === id);
             if (!data) return;
-
             generatePDF(data);
         }
 
         function deleteRecord(id) {
-            let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            records = records.filter(r => r.id !== id);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-            renderHistoryTable();
-            updateAnalytics();
-            showNotification('Data Dihapus', 'Satu rekam data berhasil dihapus.', 'info');
+            showConfirm('Hapus Data', 'Apakah Anda yakin ingin menghapus 1 rekam data ini?', () => {
+                let records = getStorageRecords();
+                records = records.filter(r => r.id !== id);
+                setSafeStorage(STORAGE_KEY, JSON.stringify(records));
+                renderHistoryTable();
+                updateAnalytics();
+                showNotification('Data Dihapus', 'Satu rekam data berhasil dihapus.', 'info');
+            });
         }
 
         function clearAllDataConfirm() {
-            if (confirm('Apakah Anda yakin ingin menghapus SELURUH riwayat database SPPG?')) {
-                localStorage.removeItem(STORAGE_KEY);
+            showConfirm('Hapus Semua Data', 'Apakah Anda yakin ingin menghapus SELURUH database riwayat SPPG?', () => {
+                clearStorageRecords();
                 renderHistoryTable();
                 updateAnalytics();
                 showNotification('Database Dikosongkan', 'Seluruh data riwayat telah dihapus.', 'warning');
-            }
+            });
         }
 
         function applyDateFilter() {
@@ -2231,29 +2675,31 @@ function doPost(e) {
         }
 
         function resetDateFilter() {
-            if (document.getElementById('filter_start')) document.getElementById('filter_start').value = '';
-            if (document.getElementById('filter_end')) document.getElementById('filter_end').value = '';
+            const start = document.getElementById('filter_start');
+            const end = document.getElementById('filter_end');
+            if (start) start.value = '';
+            if (end) end.value = '';
             renderHistoryTable();
         }
 
         function updateAnalytics() {
-            const records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const records = getStorageRecords();
             const total = records.length;
-            const goCount = records.filter(r => r.keputusan.startsWith('GO-') || r.keputusan === 'GO').length;
-            const catatanCount = records.filter(r => r.keputusan.includes('CATATAN')).length;
-            const nogoCount = records.filter(r => r.keputusan.includes('NO-GO')).length;
+            const goCount = records.filter(r => r.keputusan && (r.keputusan.startsWith('GO-') || r.keputusan === 'GO')).length;
+            const catatanCount = records.filter(r => r.keputusan && r.keputusan.includes('CATATAN')).length;
+            const nogoCount = records.filter(r => r.keputusan && r.keputusan.includes('NO-GO')).length;
 
             const goPct = total > 0 ? Math.round((goCount / total) * 100) : 0;
 
-            if (document.getElementById('stat_total')) document.getElementById('stat_total').innerText = total;
-            if (document.getElementById('stat_go')) document.getElementById('stat_go').innerText = goCount;
-            if (document.getElementById('stat_go_pct')) document.getElementById('stat_go_pct').innerText = `${goPct}% dari total`;
-            if (document.getElementById('stat_catatan')) document.getElementById('stat_catatan').innerText = catatanCount;
-            if (document.getElementById('stat_nogo')) document.getElementById('stat_nogo').innerText = nogoCount;
+            setTxt('stat_total', total);
+            setTxt('stat_go', goCount);
+            setTxt('stat_go_pct', `${goPct}% dari total`);
+            setTxt('stat_catatan', catatanCount);
+            setTxt('stat_nogo', nogoCount);
         }
 
         function exportToCSV() {
-            const records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const records = getStorageRecords();
             if (records.length === 0) {
                 showNotification('Data Kosong', 'Tidak ada data untuk diekspor ke CSV.', 'warning');
                 return;
@@ -2271,7 +2717,7 @@ function doPost(e) {
                 `"${r.air_minum_sumber}"`,
                 `"${r.air_masak_sumber}"`,
                 `"${r.keputusan}"`,
-                `"${r.temuan.replace(/"/g, '""')}"`
+                `"${(r.temuan || '').replace(/"/g, '""')}"`
             ]);
 
             const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
@@ -2286,11 +2732,12 @@ function doPost(e) {
         }
 
         function resetFormWithConfirm() {
-            if (confirm('Apakah Anda yakin ingin mengosongkan seluruh isian form?')) {
-                document.getElementById('sppgForm').reset();
+            showConfirm('Reset Form', 'Apakah Anda yakin ingin mengosongkan seluruh isian form?', () => {
+                const form = document.getElementById('sppgForm');
+                if (form) form.reset();
                 calculatePMTotal();
-                showNotification('Form Direset', 'Seluruh isian telah dikembalikan ke awal.', 'info');
-            }
+                showNotification('Form Direset', 'Seluruh isian telah dikosongkan.', 'info');
+            });
         }
     </script>
 </body>
