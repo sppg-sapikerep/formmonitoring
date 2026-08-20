@@ -86,7 +86,7 @@
 
         /* CRITICAL: Off-screen PDF container layout to prevent html2canvas blank page issue */
         #pdfRenderContainer {
-            position: fixed;
+            position: absolute;
             top: 0;
             left: -9999px; /* Positioned off-screen, NOT display:none so canvas can measure dimensions */
             width: 210mm;
@@ -210,22 +210,82 @@
 
         <!-- Navigation Tabs -->
         <div class="bg-navy-900 px-4 sm:px-8 border-t border-slate-800">
-            <div class="max-w-7xl mx-auto flex space-x-2 overflow-x-auto py-1">
-                <button onclick="switchTab('form-tab')" id="nav-form-tab" class="tab-btn active px-4 py-2.5 text-sm font-medium rounded-t-lg transition flex items-center space-x-2 whitespace-nowrap text-slate-300 hover:text-white">
-                    <i class="fa-solid fa-file-pen text-emerald-500"></i>
-                    <span>Form Checklist SPPG</span>
-                </button>
-                <button onclick="switchTab('history-tab')" id="nav-history-tab" class="tab-btn px-4 py-2.5 text-sm font-medium rounded-t-lg transition flex items-center space-x-2 whitespace-nowrap text-slate-300 hover:text-white">
-                    <i class="fa-solid fa-database text-gold-500"></i>
-                    <span>Riwayat & Export Database</span>
-                </button>
-                <button onclick="switchTab('analytics-tab')" id="nav-analytics-tab" class="tab-btn px-4 py-2.5 text-sm font-medium rounded-t-lg transition flex items-center space-x-2 whitespace-nowrap text-slate-300 hover:text-white">
-                    <i class="fa-solid fa-chart-pie text-sky-400"></i>
-                    <span>Ringkasan Dashboard</span>
+            <div class="max-w-7xl mx-auto flex items-center justify-between py-1">
+                <div class="flex space-x-2 overflow-x-auto">
+                    <button onclick="switchTab('form-tab')" id="nav-form-tab" class="tab-btn active px-4 py-2.5 text-sm font-medium rounded-t-lg transition flex items-center space-x-2 whitespace-nowrap text-slate-300 hover:text-white">
+                        <i class="fa-solid fa-file-pen text-emerald-500"></i>
+                        <span>Form Checklist SPPG</span>
+                    </button>
+                    <button onclick="switchTab('history-tab')" id="nav-history-tab" class="tab-btn px-4 py-2.5 text-sm font-medium rounded-t-lg transition flex items-center space-x-2 whitespace-nowrap text-slate-300 hover:text-white">
+                        <i class="fa-solid fa-database text-gold-500"></i>
+                        <span>Riwayat & Export Database</span>
+                    </button>
+                    <button onclick="switchTab('analytics-tab')" id="nav-analytics-tab" class="tab-btn px-4 py-2.5 text-sm font-medium rounded-t-lg transition flex items-center space-x-2 whitespace-nowrap text-slate-300 hover:text-white">
+                        <i class="fa-solid fa-chart-pie text-sky-400"></i>
+                        <span>Ringkasan Dashboard</span>
+                    </button>
+                </div>
+
+                <!-- Google Drive Status Button -->
+                <button onclick="openGDriveModal()" id="gdrive-status-btn" class="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition">
+                    <i class="fa-brands fa-google-drive text-amber-400 text-sm"></i>
+                    <span id="gdrive-status-text">Set Google Drive</span>
                 </button>
             </div>
         </div>
     </header>
+
+    <!-- MODAL INTEGRASI GOOGLE DRIVE -->
+    <div id="gdriveModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto text-slate-800">
+            <div class="flex justify-between items-center border-b pb-3">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-brands fa-google-drive text-2xl text-amber-500"></i>
+                    <h3 class="text-lg font-bold font-heading text-navy-800">Koneksi Auto-Save Google Drive</h3>
+                </div>
+                <button onclick="closeGDriveModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+            </div>
+
+            <div class="space-y-3 text-xs text-slate-600">
+                <p>Aplikasi ini akan menyimpan PDF secara otomatis ke Folder Google Drive:</p>
+                <div class="p-2.5 bg-slate-100 rounded-lg font-mono text-[11px] text-emerald-700 break-all select-all border">
+                    Target Folder ID: 1OxQd1lFN1wq1T7-obgOiHrjPTKWTv2Hy
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block font-bold text-slate-700">Google Apps Script Web App URL:</label>
+                    <input type="url" id="gas_url_input" placeholder="https://script.google.com/macros/s/AKfycbz5JC58Bkto3VUO5Sk2ebI6ZMzbkxkqDv2Jwjii36GjlKG5jD5uwR1wSLytD6J-0VVJ/exec" class="w-full p-2.5 border rounded-lg font-mono text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+                <!-- Petunjuk Singkat Setup Apps Script -->
+                <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl space-y-2 text-[11.5px] text-amber-900">
+                    <span class="font-bold block flex items-center gap-1">
+                        <i class="fa-solid fa-code"></i> Kode Script Google Apps Script (Salin ke Extensions > Apps Script):
+                    </span>
+                    <pre class="bg-amber-100/70 p-2 rounded text-[10px] font-mono overflow-x-auto select-all">
+function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var folderId = "1OxQd1lFN1wq1T7-obgOiHrjPTKWTv2Hy";
+    var folder = DriveApp.getFolderById(folderId);
+    var bytes = Utilities.base64Decode(data.pdfBase64);
+    var blob = Utilities.newBlob(bytes, "application/pdf", data.fileName);
+    var file = folder.createFile(blob);
+    return ContentService.createTextOutput(JSON.stringify({status: "success", fileUrl: file.getUrl()})).setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({status: "error", message: err.toString()})).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+</pre>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-2 border-t">
+                <button type="button" onclick="closeGDriveModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-xs font-bold">Batal</button>
+                <button type="button" onclick="saveGDriveConfig()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold">Simpan & Hubungkan</button>
+            </div>
+        </div>
+    </div>
 
     <!-- MAIN CONTAINER -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6">
@@ -1070,8 +1130,20 @@
                                 <div>
                                     <label class="block font-bold text-slate-700 mb-1">Suhu makanan saat mulai dibagikan:</label>
                                     <div class="grid grid-cols-2 gap-2">
-                                        <div><span class="block text-slate-500">Panas (&gt;60°C):</span><input type="number" step="0.1" id="dist_suhu_panas" placeholder="°C" class="p-1.5 border rounded bg-white w-full"></div>
-                                        <div><span class="block text-slate-500">Dingin (&lt;5°C):</span><input type="number" step="0.1" id="dist_suhu_dingin" placeholder="°C" class="p-1.5 border rounded bg-white w-full"></div>
+                                        <div>
+                                            <span class="block text-slate-500">Panas (&gt;60°C):</span>
+                                            <div class="grid grid-cols-2 gap-1">
+                                                <input type="number" step="0.1" id="dist_suhu_panas" placeholder="°C" class="p-1.5 border rounded bg-white w-full">
+                                                <input type="time" id="dist_jam_panas" class="p-1.5 border rounded bg-white w-full">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span class="block text-slate-500">Dingin (&lt;5°C):</span>
+                                            <div class="grid grid-cols-2 gap-1">
+                                                <input type="number" step="0.1" id="dist_suhu_dingin" placeholder="°C" class="p-1.5 border rounded bg-white w-full">
+                                                <input type="time" id="dist_jam_dingin" class="p-1.5 border rounded bg-white w-full">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div>
@@ -1357,8 +1429,12 @@
                 </tr>
             </table>
             <div class="pdf-footnote">
-                Petunjuk Pengisian & Sumber: Setiap kotak diisi dengan ceklis. Keterangan diisikan sesuai dengan kondisi. Sumber: Rapid Test Kimiawi & mitigasi E. coli/Pseudomonas Sistakol, RAPIM 18 Agustus 2026
+                <b>Petunjuk Pengisian & Sumber:</b> Setiap kotak diisi dengan ceklis. Keterangan diisikan sesuai dengan kondisi.<br>
+                <i>Sumber: Rapid Test Kimiawi & mitigasi E. coli/Pseudomonas Sistakol, RAPIM 18 Agustus 2026</i>
             </div>
+
+            <!-- PAGE BREAK HALAMAN 2 -->
+            <div class="pdf-page-break"></div>
 
             <div class="pdf-sub-title">3. KONDISI RUANGAN</div>
             <div style="font-size: 8pt; margin-bottom: 4px;">Cek kondisi di seluruh ruang tempat proses penerimaan, persiapan, pengolahan, pemorsian, hingga distribusi.</div>
@@ -1398,10 +1474,7 @@
                     </tr>
                 </tbody>
             </table>
-            <div class="pdf-footnote">Petunjuk Pengisian: Setiap kotak diisi dengan ceklis. Keterangan diisikan sesuai dengan kondisi.</div>
-
-            <!-- PAGE BREAK TO MATCH PAGE 2 OF ORIGINAL DOCUMENT -->
-            <div class="pdf-page-break"></div>
+            <div class="pdf-footnote"><b>Petunjuk Pengisian:</b> Setiap kotak diisi dengan ceklis. Keterangan diisikan sesuai dengan kondisi.</div>
 
             <!-- II. PENERIMAAN DAN PENYIMPANAN BAHAN BAKU -->
             <div class="pdf-section-title">II. PENERIMAAN DAN PENYIMPANAN BAHAN BAKU</div>
@@ -1426,16 +1499,26 @@
                     <tr><td style="text-align: center;" id="pdf_bb_5_c">[ ]</td><td>Sayur</td><td id="pdf_bb_5_j">-</td><td id="pdf_bb_5_k">-</td><td id="pdf_bb_5_w">-</td><td id="pdf_bb_5_p">-</td><td id="pdf_bb_5_ket">-</td></tr>
                 </tbody>
             </table>
-            <div class="pdf-footnote">Sumber: mitigasi E. coli/Salmonella kualitas bahan baku, Sistakol RAPIM 18 Agustus 2026</div>
+            <div class="pdf-footnote">
+                <b>Petunjuk Pengisian:</b> Setiap kotak diisi dengan ceklis. Keterangan diisikan sesuai dengan kondisi.<br>
+                <i>Sumber: mitigasi E. coli/Salmonella kualitas bahan baku, Sistakol RAPIM 18 Agustus 2026</i>
+            </div>
 
             <div class="pdf-sub-title">2. SUHU BAHAN BAKU & RUANG PENYIMPANAN</div>
             <div style="font-size: 8.5pt; line-height: 1.5; border: 1px solid #000; padding: 6px; background:#f8fafc; margin-bottom: 6px;">
-                • <b>Suhu bahan baku beku (1)* saat diterima:</b> <span id="pdf_beku1_v">-</span> °C (diambil jam <span id="pdf_beku1_j">-</span>) — Nama bahan: <span id="pdf_beku1_n">-</span> <i style="font-size:7.5pt;">(standar: &lt; -18°C)</i><br>
-                • <b>Suhu bahan baku beku (2) saat diterima:</b> <span id="pdf_beku2_v">-</span> °C (diambil jam <span id="pdf_beku2_j">-</span>) — Nama bahan: <span id="pdf_beku2_n">-</span> <i style="font-size:7.5pt;">(standar: &lt; -18°C)</i><br>
-                • <b>Suhu chiller / kulkas bahan baku:</b> <span id="pdf_chiller_v">-</span> °C (diambil jam <span id="pdf_chiller_j">-</span>) <i style="font-size:7.5pt;">(standar: &lt; 5°C)</i><br>
-                • <b>Suhu freezer bahan baku (kalau ada):</b> <span id="pdf_freezer_v">-</span> °C (diambil jam <span id="pdf_freezer_j">-</span>) <i style="font-size:7.5pt;">(standar: &lt; -18°C)</i>
+                • <b>Suhu bahan baku beku (1)* saat diterima:</b> <span id="pdf_beku1_v">-</span> °C (diambil jam <span id="pdf_beku1_j">-</span>) — Nama bahan baku: <span id="pdf_beku1_n">-</span> <i style="font-size:7.5pt;">(standar aman: di bawah -18°C)</i><br>
+                • <b>Suhu bahan baku beku (2) saat diterima:</b> <span id="pdf_beku2_v">-</span> °C (diambil jam <span id="pdf_beku2_j">-</span>) — Nama bahan baku: <span id="pdf_beku2_n">-</span> <i style="font-size:7.5pt;">(standar aman: di bawah -18°C)</i><br>
+                • <b>Suhu chiller / kulkas bahan baku:</b> <span id="pdf_chiller_v">-</span> °C (diambil jam <span id="pdf_chiller_j">-</span>) <i style="font-size:7.5pt;">(standar aman: di bawah 5°C)</i><br>
+                • <b>Suhu freezer bahan baku (kalau ada):</b> <span id="pdf_freezer_v">-</span> °C (diambil jam <span id="pdf_freezer_j">-</span>) <i style="font-size:7.5pt;">(standar aman: di bawah -18°C)</i>
             </div>
-            <div class="pdf-footnote">*diisi dengan nama bahan baku yang diterima dalam kondisi beku. Sumber: mitigasi Bacillus cereus/Listeria - kendali suhu-waktu penyimpanan, Sistakol RAPIM 18 Agustus 2026</div>
+            <div class="pdf-footnote">
+                <b>Petunjuk & Catatan Sumber:</b><br>
+                *diisi dengan nama bahan baku yang diterima dalam kondisi beku<br>
+                <i>Sumber: mitigasi Bacillus cereus/Listeria - kendali suhu-waktu penyimpanan, Sistakol RAPIM 18 Agustus 2026</i>
+            </div>
+
+            <!-- PAGE BREAK HALAMAN 3 -->
+            <div class="pdf-page-break"></div>
 
             <div class="pdf-sub-title">3. BAHAN MAKANAN</div>
             <table>
@@ -1468,9 +1551,7 @@
                     </tr>
                 </tbody>
             </table>
-
-            <!-- PAGE BREAK TO MATCH PAGE 3 OF ORIGINAL DOCUMENT -->
-            <div class="pdf-page-break"></div>
+            <div class="pdf-footnote"><b>Petunjuk Pengisian:</b> Setiap kotak diisi dengan ceklis. Keterangan diisikan sesuai dengan kondisi.</div>
 
             <!-- III. PERSIAPAN, PENGOLAHAN DAN PENDINGINAN -->
             <div class="pdf-section-title">III. PERSIAPAN, PENGOLAHAN DAN PENDINGINAN</div>
@@ -1491,6 +1572,7 @@
                     <tr><td style="text-align: center;" id="pdf_hp_3_c">[ ]</td><td>Semua cuci tangan pakai sabun sebelum memulai tahap persiapan?</td><td id="pdf_hp_3_res">-</td><td id="pdf_hp_3_ket">-</td></tr>
                 </tbody>
             </table>
+            <div class="pdf-footnote"><b>Petunjuk Pengisian:</b> Setiap kotak diisi dengan ceklis. Keterangan diisikan sesuai dengan kondisi.</div>
 
             <div class="pdf-sub-title">2. PERSIAPAN</div>
             <table>
@@ -1508,6 +1590,10 @@
                     <tr><td style="text-align: center;" id="pdf_p_3_c">[ ]</td><td>Apakah ada kendala dalam tahapan persiapan?</td><td id="pdf_p_3_res">-</td><td id="pdf_p_3_ket">-</td></tr>
                 </tbody>
             </table>
+            <div class="pdf-footnote"><b>Petunjuk Pengisian:</b> Setiap kotak diisi dengan ceklis. Keterangan diisikan sesuai dengan kondisi.</div>
+
+            <!-- PAGE BREAK HALAMAN 4 -->
+            <div class="pdf-page-break"></div>
 
             <div class="pdf-sub-title">3. MENU RAWAN HARI INI</div>
             <table>
@@ -1527,7 +1613,10 @@
                     <tr><td style="text-align: center;" id="pdf_mr_5_c">[ ]</td><td><b>Susu/olahan susu</b></td><td id="pdf_mr_5_res">-</td><td>Sudah dipasteurisasi (bukan susu mentah)?</td></tr>
                 </tbody>
             </table>
-            <div class="pdf-footnote">Catatan: Ikan berdasar insiden Kab. Karo (13 Agt 2026); Ayam bersantan & telur dadar berdasar data ARR tertinggi & temuan lab Kemenkes PHEOC. Susu jaga-jaga umum, bukan insiden spesifik MBG.</div>
+            <div class="pdf-footnote">
+                <b>Catatan:</b> Ikan berdasar insiden Kab. Karo (13 Agt 2026); Ayam bersantan & telur dadar berdasar data ARR tertinggi & temuan lab Kemenkes PHEOC. Susu jaga-jaga umum, bukan insiden spesifik MBG. Daftar ini tidak lengkap tetap waspada menu lain yang terlihat berisiko.<br>
+                <b>Petunjuk Pengisian:</b> Setiap kotak diisi dengan ceklis.
+            </div>
 
             <div class="pdf-sub-title">4. PERSONAL HIGIENE TIM PENGOLAHAN</div>
             <table>
@@ -1545,6 +1634,13 @@
                     <tr><td style="text-align: center;" id="pdf_ho_3_c">[ ]</td><td>Semua cuci tangan pakai sabun sebelum memulai masak dan keluar masuk dari area pengolahan makanan?</td><td id="pdf_ho_3_res">-</td><td id="pdf_ho_3_ket">-</td></tr>
                 </tbody>
             </table>
+            <div class="pdf-footnote">
+                <b>Petunjuk Pengisian:</b> Setiap kotak diisi dengan ceklis. Keterangan diisikan sesuai dengan kondisi.<br>
+                <i>Sumber: mitigasi Staphylococcus aureus higiene penjamah, Sistakol RAPIM 18 Agustus 2026</i>
+            </div>
+
+            <!-- PAGE BREAK HALAMAN 5 -->
+            <div class="pdf-page-break"></div>
 
             <div class="pdf-sub-title">5. PROSES PENGOLAHAN MAKANAN</div>
             <table>
@@ -1558,11 +1654,15 @@
                 </thead>
                 <tbody>
                     <tr><td style="text-align: center;" id="pdf_m_1_c">[ ]</td><td>Daging, ayam, ikan, dan telur dicek matang tidak ada bagian merah muda / mentah di dalam?</td><td id="pdf_m_1_res">-</td><td id="pdf_m_1_ket">-</td></tr>
-                    <tr><td style="text-align: center;" id="pdf_m_2_c">[ ]</td><td>Pemeriksaan waktu dan suhu pada makanan matang tertentu?</td><td id="pdf_m_2_res">-</td><td>Suhu: <span id="pdf_m_2_suhu">-</span> °C, Jam: <span id="pdf_m_2_jam">-</span></td></tr>
+                    <tr><td style="text-align: center;" id="pdf_m_2_c">[ ]</td><td>Pemeriksaan waktu dan suhu pada makanan matang tertentu (nasi, daging, ayam, ikan, telur, kentang, jagung)?</td><td id="pdf_m_2_res">-</td><td>Suhu matang: <span id="pdf_m_2_suhu">-</span> °C, Jam: <span id="pdf_m_2_jam">-</span></td></tr>
                     <tr><td style="text-align: center;" id="pdf_m_3_c">[ ]</td><td>Apakah tata laksana pengolahan makanan sudah sesuai dengan SOP?</td><td id="pdf_m_3_res">-</td><td id="pdf_m_3_ket">-</td></tr>
                     <tr><td style="text-align: center;" id="pdf_m_4_c">[ ]</td><td>Apakah ada kendala dalam tahapan pengolahan?</td><td id="pdf_m_4_res">-</td><td id="pdf_m_4_ket">-</td></tr>
                 </tbody>
             </table>
+            <div class="pdf-footnote">
+                <b>Petunjuk Pengisian:</b> Setiap kotak diisi dengan ceklis. Keterangan diisikan sesuai dengan kondisi.<br>
+                <i>Sumber: mitigasi E. coli / Salmonella pematangan sempurna, Sistakol RAPIM 18 Agustus 2026</i>
+            </div>
 
             <div class="pdf-sub-title">6. PROSES PENDINGINAN MAKANAN</div>
             <table>
@@ -1576,13 +1676,17 @@
                 </thead>
                 <tbody>
                     <tr><td style="text-align: center;" id="pdf_d_1_c">[ ]</td><td>Apakah ada area / ruang khusus (steril) untuk pendinginan makanan?</td><td id="pdf_d_1_res">-</td><td id="pdf_d_1_ket">-</td></tr>
-                    <tr><td style="text-align: center;" id="pdf_d_2_c">[ ]</td><td>Apakah suhu makanan yang sudah jadi sudah diukur? (panas: 60°C, dingin: -5°C)</td><td id="pdf_d_2_res">-</td><td>Suhu diukur: <span id="pdf_d_2_suhu">-</span> °C</td></tr>
+                    <tr><td style="text-align: center;" id="pdf_d_2_c">[ ]</td><td>Apakah suhu makanan yang sudah jadi sudah diukur? (standar aman makanan panas: 60°C, standar aman makanan dingin: -5°C)</td><td id="pdf_d_2_res">-</td><td>Suhu diukur: <span id="pdf_d_2_suhu">-</span> °C</td></tr>
                     <tr><td style="text-align: center;" id="pdf_d_3_c">[ ]</td><td>Apakah nasi berada pada suhu ruang lebih dari 2 jam?</td><td id="pdf_d_3_res">-</td><td>Durasi suhu ruang: <span id="pdf_d_3_durasi">-</span> jam</td></tr>
                     <tr><td style="text-align: center;" id="pdf_d_4_c">[ ]</td><td>Apakah ada kendala dalam tahapan pendinginan?</td><td id="pdf_d_4_res">-</td><td id="pdf_d_4_ket">-</td></tr>
                 </tbody>
             </table>
+            <div class="pdf-footnote">
+                <b>Petunjuk Pengisian:</b> Setiap kotak diisi dengan ceklis. Keterangan diisikan sesuai dengan kondisi.<br>
+                <i>Sumber: mitigasi E. coli / Salmonella pematangan sempurna, Sistakol RAPIM 18 Agustus 2026</i>
+            </div>
 
-            <!-- PAGE BREAK TO MATCH PAGE 4 OF ORIGINAL DOCUMENT -->
+            <!-- PAGE BREAK HALAMAN 6 -->
             <div class="pdf-page-break"></div>
 
             <!-- IV. PEMORSIAN DAN DISTRIBUSI -->
@@ -1600,20 +1704,26 @@
                 </thead>
                 <tbody>
                     <tr><td style="text-align: center;" id="pdf_po_1_c">[ ]</td><td>Apakah sudah memenuhi standar gizi dan URT?</td><td id="pdf_po_1_res">-</td><td id="pdf_po_1_ket">-</td></tr>
-                    <tr><td style="text-align: center;" id="pdf_po_2_c">[ ]</td><td>Apakah suhu makanan saat pemorsian sudah diukur?</td><td id="pdf_po_2_res">-</td><td>Suhu saat pemorsian: <span id="pdf_po_2_suhu">-</span> °C</td></tr>
-                    <tr><td style="text-align: center;" id="pdf_po_3_c">[ ]</td><td>Apakah telah dilakukan quality control dengan uji organoleptik sederhana?</td><td id="pdf_po_3_res">-</td><td>Oleh: <span id="pdf_po_3_oleh">-</span>, Jam: <span id="pdf_po_3_jam">-</span>, Hasil: <span id="pdf_po_3_hasil">-</span></td></tr>
+                    <tr><td style="text-align: center;" id="pdf_po_2_c">[ ]</td><td>Apakah suhu makanan saat pemorsian sudah diukur? (standar aman makanan panas: 60°C standar aman makanan dingin: -5°C)</td><td id="pdf_po_2_res">-</td><td>Suhu saat pemorsian: <span id="pdf_po_2_suhu">-</span> °C</td></tr>
+                    <tr><td style="text-align: center;" id="pdf_po_3_c">[ ]</td><td>Apakah telah dilakukan quality control dengan uji organoleptik sederhana dalam proses pemorsian?</td><td id="pdf_po_3_res">-</td><td>Dilakukan oleh: <span id="pdf_po_3_oleh">-</span> Pada jam: <span id="pdf_po_3_jam">-</span> Dengan hasil: <span id="pdf_po_3_hasil">-</span></td></tr>
                     <tr><td style="text-align: center;" id="pdf_po_4_c">[ ]</td><td>Apakah ada kendala dalam tahapan pemorsian?</td><td id="pdf_po_4_res">-</td><td id="pdf_po_4_ket">-</td></tr>
-                    <tr><td style="text-align: center;" id="pdf_po_5_c">[ ]</td><td>Penyimpanan sample menu hari ini (2 sampel menu)?</td><td id="pdf_po_5_res">-</td><td id="pdf_po_5_ket">-</td></tr>
+                    <tr><td style="text-align: center;" id="pdf_po_5_c">[ ]</td><td>Apakah sudah dilakukan penyimpanan sample menu hari ini? (2 sampel menu: 1 sampel di ompreng dan dimasukan kedalam chiller, dan 1 sampel per menu di freezer)</td><td id="pdf_po_5_res">-</td><td id="pdf_po_5_ket">-</td></tr>
                     <tr>
                         <td style="text-align: center;" id="pdf_po_6_c">[ ]</td>
                         <td>Apakah terdapat sisa makanan setelah proses pemorsian?</td>
                         <td id="pdf_po_6_res">-</td>
                         <td style="font-size: 8pt;">
-                            Detail sisa (kg): Karbo: <span id="pdf_sisa_k">0</span>, Prohe: <span id="pdf_sisa_ph">0</span>, Prona: <span id="pdf_sisa_pn">0</span>, Sayur: <span id="pdf_sisa_s">0</span>, Buah: <span id="pdf_sisa_b">0</span>
+                            Detail sisa makanan:<br>
+                            • Karbohidrat: <span id="pdf_sisa_k">0</span> kg | Protein Hewani: <span id="pdf_sisa_ph">0</span> kg<br>
+                            • Protein Nabati: <span id="pdf_sisa_pn">0</span> kg | Sayur: <span id="pdf_sisa_s">0</span> kg | Buah: <span id="pdf_sisa_b">0</span> kg
                         </td>
                     </tr>
                 </tbody>
             </table>
+            <div class="pdf-footnote">
+                <b>Petunjuk Pengisian:</b> Setiap kotak diisi dengan ceklis. Keterangan diisikan sesuai dengan kondisi.<br>
+                <i>Sumber: mitigasi E. coli / Salmonella pematangan sempurna, Sistakol RAPIM 18 Agustus 2026</i>
+            </div>
 
             <div class="pdf-sub-title">2. ALAT & TEMPAT</div>
             <table>
@@ -1626,23 +1736,41 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td style="text-align: center;" id="pdf_al_1_c">[ ]</td><td>Apakah peralatan pengolahan dipakai terpisah sesuai jenis bahan baku?</td><td id="pdf_al_1_res">-</td><td id="pdf_al_1_ket">-</td></tr>
-                    <tr><td style="text-align: center;" id="pdf_al_2_c">[ ]</td><td>Apakah meja pengolahan dan alat masak dalam keadaan bersih dan kering?</td><td id="pdf_al_2_res">-</td><td id="pdf_al_2_ket">-</td></tr>
-                    <tr><td style="text-align: center;" id="pdf_al_3_c">[ ]</td><td>Apakah lantai, saluran air, dan pipa/keran tidak ada yang bocor/tergenang?</td><td id="pdf_al_3_res">-</td><td id="pdf_al_3_ket">-</td></tr>
+                    <tr><td style="text-align: center;" id="pdf_al_1_c">[ ]</td><td>Apakah peralatan pengolahan dipakai terpisah sesuai dengan jenis bahan baku? (Talenan, panci, pisau)</td><td id="pdf_al_1_res">-</td><td id="pdf_al_1_ket">-</td></tr>
+                    <tr><td style="text-align: center;" id="pdf_al_2_c">[ ]</td><td>Apakah meja pengolahan dan alat masak dalam keadaan bersih dan kering sebelum digunakan?</td><td id="pdf_al_2_res">-</td><td id="pdf_al_2_ket">-</td></tr>
+                    <tr><td style="text-align: center;" id="pdf_al_3_c">[ ]</td><td>Apakah lantai, saluran air, dan pipa/keran tidak ada yang bocor atau tergenang air?</td><td id="pdf_al_3_res">-</td><td id="pdf_al_3_ket">-</td></tr>
                 </tbody>
             </table>
-
-            <div class="pdf-sub-title">3. PROSES DISTRIBUSI</div>
-            <div style="font-size: 8.5pt; border: 1px solid #000; padding: 6px; background:#f8fafc; margin-bottom: 8px; line-height: 1.5;">
-                • <b>Jam Selesai Masak:</b> <span id="pdf_dist_m">-</span> | <b>Jam Pendistribusian (Berangkat):</b> <span id="pdf_dist_b">-</span><br>
-                • <b>Jam Sampai di Sekolah/Posyandu:</b> <span id="pdf_dist_t">-</span> | <b>Jam Konsumsi (&lt;4 jam):</b> <span id="pdf_dist_k">-</span><br>
-                • <b>Label Ompreng Terpasang Segel:</b> <span id="pdf_dist_segel">-</span> | <b>Pindah Kulkas Cold Storage Jika Ditunda:</b> <span id="pdf_dist_kulkas">-</span><br>
-                • <b>Suhu Makanan Dibagikan:</b> Panas (&gt;60°C): <span id="pdf_dist_sp">-</span> °C | Dingin (&lt;5°C): <span id="pdf_dist_sd">-</span> °C<br>
-                • <b>Kendala Distribusi:</b> <span id="pdf_dist_kendala_res">-</span> (Keterangan: <span id="pdf_dist_kendala_ket">-</span>)
+            <div class="pdf-footnote">
+                <b>Petunjuk Pengisian:</b> Setiap kotak diisi dengan ceklis. Keterangan diisikan sesuai dengan kondisi.<br>
+                <i>Sumber: mitigasi Listeria / Bacillus cereus/Pseudomonas - sanitasi area, Sistakol RAPIM 18 Agustus 2026</i>
             </div>
 
+            <div class="pdf-sub-title">3. PROSES DISTRIBUSI</div>
+            <table>
+                <tr>
+                    <td style="padding: 6px; font-size: 8.5pt; line-height: 1.5; background: #ffffff;">
+                        • <b>Jam Selesai Masak:</b> <span id="pdf_dist_m">-</span> | <b>Jam Pendistribusian (Saas berangkat dari SPPG):</b> <span id="pdf_dist_b">-</span><br>
+                        • <b>Jam Sampai di Sekolah / di Posyandu:</b> <span id="pdf_dist_t">-</span> | <b>Jam Konsumsi Makanan:</b> <span id="pdf_dist_k">-</span> <i>(dikonsumsi maksimal 4 jam setelah proses produksi)</i><br>
+                        • <b>Apakah label di ompreng telah terpasang dan berfungsi sebagai segel?</b> <span id="pdf_dist_segel">-</span><br>
+                        • <b>Suhu makanan saat mulai dibagikan:</b><br>
+                        &nbsp;&nbsp;&nbsp;- Makanan panas: <span id="pdf_dist_sp">-</span> °C (jam <span id="pdf_dist_jp">-</span>) <i>[standar aman: &gt; 60°C]</i><br>
+                        &nbsp;&nbsp;&nbsp;- Makanan dingin: <span id="pdf_dist_sd">-</span> °C (jam <span id="pdf_dist_jd">-</span>) <i>[standar aman: &lt; 5°C]</i><br>
+                        • <b>Kalau makanan tidak langsung dibagikan, sudah dipindah ke tempat / kulkas dingin?</b> <span id="pdf_dist_kulkas">-</span><br>
+                        • <b>Apakah ada kendala dalam proses distribusi?</b> <span id="pdf_dist_kendala_res">-</span> (Kalau ada, sebutkan kendala: <span id="pdf_dist_kendala_ket">-</span>)
+                    </td>
+                </tr>
+            </table>
+            <div class="pdf-footnote">
+                <b>Petunjuk Pengisian:</b> Setiap kotak diisi dengan ceklis. Keterangan diisikan sesuai dengan kondisi.<br>
+                <i>Sumber: mitigasi Bacillus cereus - kendali waktu & suhu setelah masak, Sistakol RAPIM 18 Agustus 2026</i>
+            </div>
+
+            <!-- PAGE BREAK HALAMAN 7 -->
+            <div class="pdf-page-break"></div>
+
             <!-- V. TEMUAN DAN KEPUTUSAN -->
-            <div class="pdf-section-title">V. TEMUAN & KEPUTUSAN FINAL</div>
+            <div class="pdf-section-title">V. TEMUAN & KEPUTUSAN</div>
             
             <div style="border: 1px solid #000; padding: 6px; margin-bottom: 8px; font-size: 8.5pt;">
                 <b>Temuan (Apabila ada):</b><br>
@@ -1654,9 +1782,10 @@
             </div>
 
             <!-- FOOTER KONTAK DARURAT -->
-            <div style="margin-top: 15px; border-t: 1px solid #ccc; pt-2; font-size: 8pt; text-align: center; color: #333;">
-                <b>KONTAK DARURAT:</b> PSC 119 | WA +62 8777 7591097 | pheoc.indonesia@kemkes.go.id<br>
-                <i>Dokumen ini di-generate secara digital melalui Sistem SPPG Digital Monitoring MBG 2045.</i>
+            <div style="margin-top: 25px; border-top: 1px solid #ccc; padding-top: 8px; font-size: 8.5pt; text-align: center; color: #1e293b;">
+                <b style="color: #0B2545;">KONTAK DARURAT</b><br>
+                <b>PSC 119</b> &nbsp;|&nbsp; <b>WA +62 8777 7591097</b> &nbsp;|&nbsp; <b>pheoc.indonesia@kemkes.go.id</b><br>
+                <i style="font-size: 7.5pt; color: #64748b;">Dokumen ini di-generate secara digital melalui Sistem SPPG Digital Monitoring MBG 2045.</i>
             </div>
 
         </div>
@@ -1664,16 +1793,90 @@
 
     <!-- JAVASCRIPT APP LOGIC -->
     <script>
-        // LocalStorage Database Key
+        // LocalStorage & Google Drive Constants
         const STORAGE_KEY = 'SPPG_MONITORING_DATABASE_V1';
+        const GOOGLE_DRIVE_FOLDER_ID = '1OxQd1lFN1wq1T7-obgOiHrjPTKWTv2Hy';
+        let googleScriptUrl = localStorage.getItem('SPPG_GAS_URL') || '';
 
         // Initialize App on DOM Ready
         window.addEventListener('DOMContentLoaded', () => {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('tanggal_audit').value = today;
+            updateGDriveUIStatus();
             renderHistoryTable();
             updateAnalytics();
         });
+
+        function openGDriveModal() {
+            document.getElementById('gas_url_input').value = googleScriptUrl;
+            document.getElementById('gdriveModal').classList.remove('hidden');
+        }
+
+        function closeGDriveModal() {
+            document.getElementById('gdriveModal').classList.add('hidden');
+        }
+
+        function saveGDriveConfig() {
+            const url = document.getElementById('gas_url_input').value.trim();
+            localStorage.setItem('SPPG_GAS_URL', url);
+            googleScriptUrl = url;
+            updateGDriveUIStatus();
+            closeGDriveModal();
+            showNotification('Google Drive Terhubung', 'URL Google Apps Script telah diperbarui.', 'success');
+        }
+
+        function updateGDriveUIStatus() {
+            const statusText = document.getElementById('gdrive-status-text');
+            if (googleScriptUrl) {
+                statusText.innerText = 'Google Drive Aktif';
+                statusText.classList.add('text-emerald-400');
+            } else {
+                statusText.innerText = 'Set Google Drive';
+                statusText.classList.remove('text-emerald-400');
+            }
+        }
+
+        // Upload PDF Blob directly to Google Drive folder
+        async function uploadPDFToGoogleDrive(pdfBlob, fileName) {
+            if (!googleScriptUrl) return null;
+
+            try {
+                showNotification('Mengunggah ke Drive...', 'Menyimpan berkas PDF ke folder Google Drive...', 'info');
+                
+                // Convert Blob to Base64
+                const reader = new FileReader();
+                const base64Promise = new Promise((resolve) => {
+                    reader.onloadend = () => {
+                        const base64data = reader.result.split(',')[1];
+                        resolve(base64data);
+                    };
+                });
+                reader.readAsDataURL(pdfBlob);
+                const pdfBase64 = await base64Promise;
+
+                const response = await fetch(googleScriptUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        folderId: GOOGLE_DRIVE_FOLDER_ID,
+                        fileName: fileName,
+                        pdfBase64: pdfBase64
+                    })
+                });
+
+                const resData = await response.json();
+                if (resData.status === 'success') {
+                    showNotification('Tersimpan di Drive!', 'Berkas PDF berhasil disimpan di folder Google Drive Anda.', 'success');
+                    return resData.fileUrl;
+                } else {
+                    console.error('Drive upload error:', resData.message);
+                    return null;
+                }
+            } catch (err) {
+                console.error('Error uploading to Google Drive:', err);
+                return null;
+            }
+        }
 
         // Tab Navigation Logic
         function switchTab(tabId) {
@@ -1701,234 +1904,51 @@
             document.getElementById('pm_total_dilayani').innerText = (pdLay + b3Lay).toLocaleString();
         }
 
-        // Collect Form Data into JSON Object
-        function getFormData() {
-            const getRadioVal = (name) => {
-                const checked = document.querySelector(`input[name="${name}"]:checked`);
-                return checked ? checked.value : '-';
+        // Helper function to generate PDF reliably regardless of page scroll position
+        function generatePDF(data, callback) {
+            populatePDFTemplate(data);
+            const element = document.getElementById('pdfRenderTemplate');
+
+            const fileName = `Checklist_SPPG_${(data.nama_sppg || 'Pusat').replace(/\s+/g, '_')}_${data.tanggal}.pdf`;
+            const opt = {
+                margin:       [8, 8, 8, 8],
+                filename:     fileName,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true, 
+                    logging: false,
+                    scrollX: 0,
+                    scrollY: 0
+                },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: ['css', 'legacy'] }
             };
 
-            const getChk = (id) => document.getElementById(id)?.checked ? '[ ☑ ]' : '[ ☐ ]';
+            showNotification('Memproses PDF...', 'Mohon tunggu, dokumen PDF resmi sedang dibuat.', 'info');
 
-            return {
-                id: 'SPPG-' + Date.now(),
-                timestamp: new Date().toISOString(),
-                nama_sppg: document.getElementById('nama_sppg').value || 'SPPG Pusat',
-                kepala_sppg: document.getElementById('kepala_sppg').value || '-',
-                pengawas_keuangan: document.getElementById('pengawas_keuangan').value || '-',
-                pengawas_gizi: document.getElementById('pengawas_gizi').value || '-',
-                tanggal: document.getElementById('tanggal_audit').value || new Date().toISOString().split('T')[0],
-                jam_zoom: document.getElementById('jam_zoom').value || '-',
-                asisten_lapangan: document.getElementById('asisten_lapangan').value || '-',
-                chef: document.getElementById('chef_nama').value || '-',
+            setTimeout(() => {
+                const worker = html2pdf().set(opt).from(element);
                 
-                // PM Data
-                pm_pd_pot: document.getElementById('pm_pd_potensi').value || 0,
-                pm_pd_lay: document.getElementById('pm_pd_dilayani').value || 0,
-                pm_3b_pot: document.getElementById('pm_3b_potensi').value || 0,
-                pm_3b_lay: document.getElementById('pm_3b_dilayani').value || 0,
-                pm_tot_pot: document.getElementById('pm_total_potensi').innerText,
-                pm_tot_lay: document.getElementById('pm_total_dilayani').innerText,
+                // Save locally first
+                worker.save().then(async () => {
+                    showNotification('PDF Berhasil Diunduh!', 'File PDF tersimpan di perangkat.', 'success');
+                    
+                    // Generate Blob for Google Drive upload
+                    const pdfBlob = await worker.output('blob');
+                    const driveUrl = await uploadPDFToGoogleDrive(pdfBlob, fileName);
+                    if (driveUrl) {
+                        data.driveUrl = driveUrl;
+                        saveToStorage(data);
+                        renderHistoryTable();
+                    }
 
-                // Certifications
-                cert_slhs: getRadioVal('cert_slhs'),
-                cert_halal: getRadioVal('cert_halal'),
-                cert_bnsp: getRadioVal('cert_bnsp'),
-
-                // Water
-                air_minum_sumber: getRadioVal('air_minum_src'),
-                air_minum_tgl: document.getElementById('air_minum_tgl').value || '-',
-                air_minum_ph: document.getElementById('air_minum_ph').value || 'NA',
-                air_masak_sumber: getRadioVal('air_masak_src'),
-                air_masak_tgl: document.getElementById('air_masak_tgl').value || '-',
-                air_masak_ph: document.getElementById('air_masak_ph').value || 'NA',
-
-                // Room
-                ruang_1_c: getChk('ruang_1_chk'), ruang_1_res: document.getElementById('ruang_1_res').value, ruang_1_ket: document.getElementById('ruang_1_ket').value || '-',
-                ruang_2_c: getChk('ruang_2_chk'), ruang_2_res: document.getElementById('ruang_2_res').value, ruang_2_ket: document.getElementById('ruang_2_ket').value || '-',
-                ruang_3_c: getChk('ruang_3_chk'), ruang_3_res: document.getElementById('ruang_3_res').value, ruang_3_ket: document.getElementById('ruang_3_ket').value || '-',
-                ruang_4_c: getChk('ruang_4_chk'), ruang_4_res: document.getElementById('ruang_4_res').value, ruang_4_ket: document.getElementById('ruang_4_ket').value || '-',
-
-                // Raw materials
-                bb_karbo_c: getChk('bb_karbo_chk'), bb_karbo_j: document.getElementById('bb_karbo_jml').value, bb_karbo_k: document.getElementById('bb_karbo_kual').value, bb_karbo_w: document.getElementById('bb_karbo_jam').value || '-', bb_karbo_p: document.getElementById('bb_karbo_penerima').value || '-', bb_karbo_ket: document.getElementById('bb_karbo_ket').value || '-',
-                bb_prohe_c: getChk('bb_prohe_chk'), bb_prohe_j: document.getElementById('bb_prohe_jml').value, bb_prohe_k: document.getElementById('bb_prohe_kual').value, bb_prohe_w: document.getElementById('bb_prohe_jam').value || '-', bb_prohe_p: document.getElementById('bb_prohe_penerima').value || '-', bb_prohe_ket: document.getElementById('bb_prohe_ket').value || '-',
-                bb_prona_c: getChk('bb_prona_chk'), bb_prona_j: document.getElementById('bb_prona_jml').value, bb_prona_k: document.getElementById('bb_prona_kual').value, bb_prona_w: document.getElementById('bb_prona_jam').value || '-', bb_prona_p: document.getElementById('bb_prona_penerima').value || '-', bb_prona_ket: document.getElementById('bb_prona_ket').value || '-',
-                bb_buah_c: getChk('bb_buah_chk'), bb_buah_j: document.getElementById('bb_buah_jml').value, bb_buah_k: document.getElementById('bb_buah_kual').value, bb_buah_w: document.getElementById('bb_buah_jam').value || '-', bb_buah_p: document.getElementById('bb_buah_penerima').value || '-', bb_buah_ket: document.getElementById('bb_buah_ket').value || '-',
-                bb_sayur_c: getChk('bb_sayur_chk'), bb_sayur_j: document.getElementById('bb_sayur_jml').value, bb_sayur_k: document.getElementById('bb_sayur_kual').value, bb_sayur_w: document.getElementById('bb_sayur_jam').value || '-', bb_sayur_p: document.getElementById('bb_sayur_penerima').value || '-', bb_sayur_ket: document.getElementById('bb_sayur_ket').value || '-',
-
-                // Raw temp
-                beku1_nama: document.getElementById('suhu_beku1_nama').value || '-', beku1_val: document.getElementById('suhu_beku1_val').value || '-', beku1_jam: document.getElementById('suhu_beku1_jam').value || '-',
-                beku2_nama: document.getElementById('suhu_beku2_nama').value || '-', beku2_val: document.getElementById('suhu_beku2_val').value || '-', beku2_jam: document.getElementById('suhu_beku2_jam').value || '-',
-                chiller_val: document.getElementById('suhu_chiller_val').value || '-', chiller_jam: document.getElementById('suhu_chiller_jam').value || '-',
-                freezer_val: document.getElementById('suhu_freezer_val').value || '-', freezer_jam: document.getElementById('suhu_freezer_jam').value || '-',
-
-                // Section II - Bahan Makanan
-                bm_1_c: getChk('bm_1_chk'), bm_1_res: document.getElementById('bm_1_res').value, bm_1_ket: document.getElementById('bm_1_ket').value || '-',
-                bm_2_c: getChk('bm_2_chk'), bm_2_res: document.getElementById('bm_2_res').value, bm_2_ket: document.getElementById('bm_2_ket').value || '-',
-                bm_3_c: getChk('bm_3_chk'), bm_3_res: document.getElementById('bm_3_res').value, bm_3_ket: document.getElementById('bm_3_ket').value || '-',
-
-                // Section III - Persiapan, Pengolahan & Pendinginan
-                hp_1_c: getChk('hp_1_chk'), hp_1_res: document.getElementById('hp_1_res').value, hp_1_ket: document.getElementById('hp_1_ket').value || '-',
-                hp_2_c: getChk('hp_2_chk'), hp_2_res: document.getElementById('hp_2_res').value, hp_2_ket: document.getElementById('hp_2_ket').value || '-',
-                hp_3_c: getChk('hp_3_chk'), hp_3_res: document.getElementById('hp_3_res').value, hp_3_ket: document.getElementById('hp_3_ket').value || '-',
-
-                p_1_c: getChk('p_1_chk'), p_1_res: document.getElementById('p_1_res').value, p_1_ket: document.getElementById('p_1_ket').value || '-',
-                p_2_c: getChk('p_2_chk'), p_2_res: document.getElementById('p_2_res').value, p_2_ket: document.getElementById('p_2_ket').value || '-',
-                p_3_c: getChk('p_3_chk'), p_3_res: document.getElementById('p_3_res').value, p_3_ket: document.getElementById('p_3_ket').value || '-',
-
-                mr_1_c: getChk('mr_1_chk'), mr_1_res: document.getElementById('mr_1_res').value,
-                mr_2_c: getChk('mr_2_chk'), mr_2_res: document.getElementById('mr_2_res').value,
-                mr_3_c: getChk('mr_3_chk'), mr_3_res: document.getElementById('mr_3_res').value,
-                mr_4_c: getChk('mr_4_chk'), mr_4_res: document.getElementById('mr_4_res').value,
-                mr_5_c: getChk('mr_5_chk'), mr_5_res: document.getElementById('mr_5_res').value,
-
-                ho_1_c: getChk('ho_1_chk'), ho_1_res: document.getElementById('ho_1_res').value, ho_1_ket: document.getElementById('ho_1_ket').value || '-',
-                ho_2_c: getChk('ho_2_chk'), ho_2_res: document.getElementById('ho_2_res').value, ho_2_ket: document.getElementById('ho_2_ket').value || '-',
-                ho_3_c: getChk('ho_3_chk'), ho_3_res: document.getElementById('ho_3_res').value, ho_3_ket: document.getElementById('ho_3_ket').value || '-',
-
-                m_1_c: getChk('m_1_chk'), m_1_res: document.getElementById('m_1_res').value, m_1_ket: document.getElementById('m_1_ket').value || '-',
-                m_2_c: getChk('m_2_chk'), m_2_res: document.getElementById('m_2_res').value, m_2_suhu: document.getElementById('m_2_suhu').value || '-', m_2_jam: document.getElementById('m_2_jam').value || '-',
-                m_3_c: getChk('m_3_chk'), m_3_res: document.getElementById('m_3_res').value, m_3_ket: document.getElementById('m_3_ket').value || '-',
-                m_4_c: getChk('m_4_chk'), m_4_res: document.getElementById('m_4_res').value, m_4_ket: document.getElementById('m_4_ket').value || '-',
-
-                d_1_c: getChk('d_1_chk'), d_1_res: document.getElementById('d_1_res').value, d_1_ket: document.getElementById('d_1_ket').value || '-',
-                d_2_c: getChk('d_2_chk'), d_2_res: document.getElementById('d_2_res').value, d_2_suhu: document.getElementById('d_2_suhu').value || '-',
-                d_3_c: getChk('d_3_chk'), d_3_res: document.getElementById('d_3_res').value, d_3_durasi: document.getElementById('d_3_durasi').value || '-',
-                d_4_c: getChk('d_4_chk'), d_4_res: document.getElementById('d_4_res').value, d_4_ket: document.getElementById('d_4_ket').value || '-',
-
-                // Section IV - Pemorsian & Distribusi
-                po_1_c: getChk('po_1_chk'), po_1_res: document.getElementById('po_1_res').value, po_1_ket: document.getElementById('po_1_ket').value || '-',
-                po_2_c: getChk('po_2_chk'), po_2_res: document.getElementById('po_2_res').value, po_2_suhu: document.getElementById('po_2_suhu').value || '-',
-                po_3_c: getChk('po_3_chk'), po_3_res: document.getElementById('po_3_res').value, po_3_oleh: document.getElementById('po_3_oleh').value || '-', po_3_jam: document.getElementById('po_3_jam').value || '-', po_3_hasil: document.getElementById('po_3_hasil').value || '-',
-                po_4_c: getChk('po_4_chk'), po_4_res: document.getElementById('po_4_res').value, po_4_ket: document.getElementById('po_4_ket').value || '-',
-                po_5_c: getChk('po_5_chk'), po_5_res: document.getElementById('po_5_res').value, po_5_ket: document.getElementById('po_5_ket').value || '-',
-                po_6_c: getChk('po_6_chk'), po_6_res: document.getElementById('po_6_res').value,
-                sisa_k: document.getElementById('sisa_karbo').value || '0', sisa_ph: document.getElementById('sisa_prohe').value || '0', sisa_pn: document.getElementById('sisa_prona').value || '0', sisa_s: document.getElementById('sisa_sayur').value || '0', sisa_b: document.getElementById('sisa_buah').value || '0',
-
-                al_1_c: getChk('al_1_chk'), al_1_res: document.getElementById('al_1_res').value, al_1_ket: document.getElementById('al_1_ket').value || '-',
-                al_2_c: getChk('al_2_chk'), al_2_res: document.getElementById('al_2_res').value, al_2_ket: document.getElementById('al_2_ket').value || '-',
-                al_3_c: getChk('al_3_chk'), al_3_res: document.getElementById('al_3_res').value, al_3_ket: document.getElementById('al_3_ket').value || '-',
-
-                dist_m: document.getElementById('dist_jam_masak').value || '-',
-                dist_b: document.getElementById('dist_jam_berangkat').value || '-',
-                dist_t: document.getElementById('dist_jam_tiba').value || '-',
-                dist_k: document.getElementById('dist_jam_konsumsi').value || '-',
-                dist_segel: document.getElementById('dist_segel').value,
-                dist_kulkas: document.getElementById('dist_pindah_kulkas').value,
-                dist_sp: document.getElementById('dist_suhu_panas').value || '-',
-                dist_sd: document.getElementById('dist_suhu_dingin').value || '-',
-                dist_kendala_res: document.getElementById('dist_kendala_res').value,
-                dist_kendala_ket: document.getElementById('dist_kendala_ket').value || '-',
-
-                // Final
-                temuan: document.getElementById('temuan_catatan').value || 'Tidak Ada Temuan',
-                keputusan: getRadioVal('keputusan_final')
-            };
-        }
-
-        // Autofill sample data for quick testing
-        function autoFillSampleData() {
-            document.getElementById('nama_sppg').value = 'SPPG Bandung Kidul #04';
-            document.getElementById('kepala_sppg').value = 'Drs. Ahmad Hidayat';
-            document.getElementById('pengawas_keuangan').value = 'Siti Nurhaliza, S.E.';
-            document.getElementById('pengawas_gizi').value = 'Rita Sugiharto, S.Gz.';
-            document.getElementById('asisten_lapangan').value = 'Budi Santoso';
-            document.getElementById('chef_nama').value = 'Chef Hendra';
-            document.getElementById('jam_zoom').value = '06:30';
-
-            document.getElementById('pm_pd_potensi').value = 450;
-            document.getElementById('pm_pd_dilayani').value = 442;
-            document.getElementById('pm_3b_potensi').value = 35;
-            document.getElementById('pm_3b_dilayani').value = 35;
-            calculatePMTotal();
-
-            document.getElementById('air_minum_ph').value = '7.2';
-            document.getElementById('air_masak_ph').value = '7.0';
-
-            document.getElementById('suhu_beku1_nama').value = 'Daging Ayam';
-            document.getElementById('suhu_beku1_val').value = -19.5;
-            document.getElementById('suhu_beku1_jam').value = '05:15';
-
-            document.getElementById('suhu_chiller_val').value = 3.8;
-            document.getElementById('suhu_chiller_jam').value = '06:00';
-            document.getElementById('suhu_freezer_val').value = -20.1;
-            document.getElementById('suhu_freezer_jam').value = '06:00';
-
-            document.getElementById('m_2_suhu').value = 88;
-            document.getElementById('m_2_jam').value = '08:30';
-            document.getElementById('d_2_suhu').value = 65;
-
-            document.getElementById('po_2_suhu').value = 62;
-            document.getElementById('po_3_oleh').value = 'Rita Sugiharto';
-            document.getElementById('po_3_jam').value = '09:00';
-            document.getElementById('po_3_hasil').value = 'Aman, Baik';
-
-            document.getElementById('dist_jam_masak').value = '08:30';
-            document.getElementById('dist_jam_berangkat').value = '09:15';
-            document.getElementById('dist_jam_tiba').value = '09:40';
-            document.getElementById('dist_jam_konsumsi').value = '10:00';
-            document.getElementById('dist_suhu_panas').value = 61;
-
-            document.getElementById('temuan_catatan').value = 'Seluruh proses sanitasi dan hygiene berjalan dengan sangat baik sesuai SOP Kemenkes MBG.';
-
-            showNotification('Contoh Data Diisi!', 'Formulir telah diisi dengan sampel data yang valid.', 'info');
-        }
-
-        // Custom Toast Notification UI
-        function showNotification(title, text, type = 'info') {
-            const toast = document.createElement('div');
-            let bg = 'bg-navy-800 text-white border-emerald-500';
-            if(type === 'success') bg = 'bg-emerald-600 text-white border-emerald-400';
-            if(type === 'warning') bg = 'bg-amber-600 text-white border-amber-400';
-            if(type === 'info') bg = 'bg-navy-800 text-white border-gold-400';
-
-            toast.className = `fixed bottom-5 right-5 z-50 p-4 rounded-xl shadow-2xl border-l-4 ${bg} transition transform duration-300 translate-y-10 opacity-0 flex items-start space-x-3 max-w-sm`;
-            toast.innerHTML = `
-                <div>
-                    <h4 class="font-bold text-sm">${title}</h4>
-                    <p class="text-xs text-slate-100 mt-0.5">${text}</p>
-                </div>
-            `;
-
-            document.body.appendChild(toast);
-            setTimeout(() => {
-                toast.classList.remove('translate-y-10', 'opacity-0');
-            }, 50);
-
-            setTimeout(() => {
-                toast.classList.add('translate-y-10', 'opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
-        }
-
-        function saveToStorage(data) {
-            try {
-                let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-                const existingIndex = records.findIndex(r => r.id === data.id);
-                if (existingIndex >= 0) {
-                    records[existingIndex] = data;
-                } else {
-                    records.unshift(data);
-                }
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-                return true;
-            } catch (e) {
-                console.error('Error saving data:', e);
-                return false;
-            }
-        }
-
-        function handleFormSubmit(event) {
-            if (event) event.preventDefault();
-            const data = getFormData();
-            if (saveToStorage(data)) {
-                renderHistoryTable();
-                updateAnalytics();
-                showNotification('Berhasil Disimpan!', 'Data checklist SPPG telah tersimpan ke riwayat database.', 'success');
-                switchTab('history-tab');
-            } else {
-                showNotification('Gagal Menyimpan', 'Terjadi kesalahan saat menyimpan data.', 'warning');
-            }
+                    if (callback) callback();
+                }).catch(err => {
+                    console.error('PDF Generation Error:', err);
+                    showNotification('Gagal Unduh PDF', 'Terjadi kesalahan saat membuat file PDF.', 'warning');
+                });
+            }, 150);
         }
 
         // Save & Download Official PDF Action
@@ -1940,29 +1960,8 @@
             renderHistoryTable();
             updateAnalytics();
 
-            // 2. Populate off-screen PDF template
-            populatePDFTemplate(data);
-
-            // 3. Render PDF using html2pdf
-            const element = document.getElementById('pdfRenderTemplate');
-
-            const opt = {
-                margin:       [8, 8, 8, 8],
-                filename:     `Checklist_SPPG_${data.nama_sppg.replace(/\s+/g, '_')}_${data.tanggal}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak:    { mode: ['css', 'legacy'] }
-            };
-
-            showNotification('Memproses PDF...', 'Mohon tunggu, dokumen PDF resmi sedang dibuat.', 'info');
-
-            html2pdf().set(opt).from(element).save().then(() => {
-                showNotification('PDF Berhasil Diunduh!', 'File PDF tersimpan & data telah masuk ke database.', 'success');
-            }).catch(err => {
-                console.error('PDF Generation Error:', err);
-                showNotification('Status Penyimpanan', 'Data telah tersimpan dengan aman ke database.', 'success');
-            });
+            // 2. Render PDF & upload to Drive if configured
+            generatePDF(data);
         }
 
         function populatePDFTemplate(data) {
@@ -2121,7 +2120,9 @@
             document.getElementById('pdf_dist_segel').innerText = data.dist_segel;
             document.getElementById('pdf_dist_kulkas').innerText = data.dist_kulkas;
             document.getElementById('pdf_dist_sp').innerText = data.dist_sp;
+            document.getElementById('pdf_dist_jp').innerText = data.dist_jp;
             document.getElementById('pdf_dist_sd').innerText = data.dist_sd;
+            document.getElementById('pdf_dist_jd').innerText = data.dist_jd;
             document.getElementById('pdf_dist_kendala_res').innerText = data.dist_kendala_res;
             document.getElementById('pdf_dist_kendala_ket').innerText = data.dist_kendala_ket;
 
@@ -2166,6 +2167,12 @@
                 if (r.keputusan.includes('CATATAN')) badgeClass = 'bg-amber-100 text-amber-800 border-amber-300';
                 if (r.keputusan.includes('NO-GO')) badgeClass = 'bg-rose-100 text-rose-800 border-rose-300';
 
+                const driveBtn = r.driveUrl ? `
+                    <a href="${r.driveUrl}" target="_blank" title="Buka di Google Drive" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition">
+                        <i class="fa-brands fa-google-drive text-base"></i>
+                    </a>
+                ` : '';
+
                 return `
                     <tr class="hover:bg-slate-50 transition">
                         <td class="p-3 font-semibold text-slate-700">${r.tanggal}</td>
@@ -2179,6 +2186,7 @@
                         </td>
                         <td class="p-3 text-center">
                             <div class="flex items-center justify-center space-x-1">
+                                ${driveBtn}
                                 <button type="button" onclick="downloadPDFFromHistory('${r.id}')" title="Download PDF" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
                                     <i class="fa-solid fa-file-pdf text-base"></i>
                                 </button>
@@ -2197,26 +2205,7 @@
             const data = records.find(r => r.id === id);
             if (!data) return;
 
-            populatePDFTemplate(data);
-            const element = document.getElementById('pdfRenderTemplate');
-
-            const opt = {
-                margin:       [8, 8, 8, 8],
-                filename:     `Checklist_SPPG_${data.nama_sppg.replace(/\s+/g, '_')}_${data.tanggal}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak:    { mode: ['css', 'legacy'] }
-            };
-
-            showNotification('Mengunduh PDF...', 'Memproses dokumen resmi dari riwayat.', 'info');
-
-            html2pdf().set(opt).from(element).save().then(() => {
-                showNotification('Selesai!', 'File PDF berhasil diunduh.', 'success');
-            }).catch(err => {
-                console.error(err);
-                showNotification('Gagal Unduh PDF', 'Terjadi masalah saat membuat file PDF.', 'warning');
-            });
+            generatePDF(data);
         }
 
         function deleteRecord(id) {
